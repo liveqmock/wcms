@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.gather.mapper.GatherMapper">
+	<select id="showOrders" parameterType="GatherParam" resultType="GatherOrder">
+		SELECT 
+        	o.ORDER_ID as orderId,
+        	o.ORDER_NO as orderNo, 
+        	o.ORDER_NAME as orderName, 
+        	o.ORDER_CLIENT_NAME as clientName, 
+        	o.ORDER_SIGN_DATE as signDate, 
+        	u.REALNAME as signUser,
+        	o.ORDER_TOTAL as total,
+        	IFNULL(g.hadTotal,0) as hadTotal, 
+        	IFNULL((o.ORDER_TOTAL - IFNULL(g.hadTotal,0)),0) as unTotal
+		FROM 
+        	T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+        	left join (
+				SELECT 
+        			o.ORDER_ID, sum(g.TOTAL) as hadTotal
+				FROM 
+        			T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+        			left join GATHERING g on o.ORDER_ID = g.ORDER_ID
+				where 
+        			o.ORDER_STATUS = 30     
+				group by 
+				o.order_id) g 
+			on o.ORDER_ID = g.ORDER_ID
+		WHERE 
+			o.ORDER_STATUS = 30
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			<if test="orderName != null">
+				and o.ORDER_NAME like CONCAT('%',#{orderName},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signUser != null">
+				and o.ORDER_SIGNER = #{signUser}
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin}
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd}
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin}
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd}
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin}
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd}
+			</if>
+			<if test="status != null">
+				<if test="status != 0">
+					<choose>
+						<when test="status == 1">
+							and IFNULL((o.ORDER_TOTAL - IFNULL(g.hadTotal,0)),0) != 0
+						</when>
+						<otherwise>
+							and IFNULL((o.ORDER_TOTAL - IFNULL(g.hadTotal,0)),0) = 0
+						</otherwise>
+					</choose>
+				</if>
+			</if>
+		 ORDER BY 
+			o.ORDER_CREATE_TIME desc
+		LIMIT #{begin},#{rows}
+	</select>
+	
+	<select id="showTotal" parameterType="GatherParam" resultType="Integer">
+		SELECT 
+        	count(1)
+		FROM 
+        	T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+        	left join (
+				SELECT 
+        			o.ORDER_ID, sum(g.TOTAL) as hadTotal
+				FROM 
+        			T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+        			left join GATHERING g on o.ORDER_ID = g.ORDER_ID
+				where 
+        			o.ORDER_STATUS = 30      
+				group by 
+				o.order_id) g 
+			on o.ORDER_ID = g.ORDER_ID
+		WHERE 
+			o.ORDER_STATUS = 30
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			<if test="orderName != null">
+				and o.ORDER_NAME like CONCAT('%',#{orderName},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signUser != null">
+				and o.ORDER_SIGNER = #{signUser}
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin}
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd}
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin}
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd}
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin}
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd}
+			</if>
+			<if test="status != null">
+				<if test="status != 0">
+					<choose>
+						<when test="status == 1">
+							and IFNULL((o.ORDER_TOTAL - IFNULL(g.hadTotal,0)),0) != 0
+						</when>
+						<otherwise>
+							and IFNULL((o.ORDER_TOTAL - IFNULL(g.hadTotal,0)),0) = 0
+						</otherwise>
+					</choose>
+				</if>
+			</if>
+	</select>
+	
+	<select id="getGatherList" resultType="Gather">
+		SELECT 
+			g.ID as id, 
+			g.CODE as code, 
+			o.ORDER_NO as orderNo, 
+			g.TOTAL as total, 
+			u.REALNAME as realname, 
+			g.GATHERING_DATE as gatherDate,
+			g.GATHRING_USER as gatherUser,
+			g.REMARK as remark,
+			g.STATUS as status 
+        FROM 
+        	GATHERING g left join T_ORDER o on g.ORDER_ID=o.ORDER_ID 
+        	left join SYS_USER u on g.GATHRING_USER=u.ID  
+		WHERE 
+			g.ORDER_ID = #{orderId} 
+		ORDER BY 
+			g.STATUS asc
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getGatherTotal" resultType="Integer">
+		SELECT 
+			count(1) 
+        FROM 
+        	GATHERING 
+		WHERE 
+			ORDER_ID = #{orderId}
+	</select>
+	
+	<select id="getNextNo" resultType="Integer">
+		SELECT max(right(CODE,4)) FROM GATHERING
+	</select>
+	
+	<insert id="saveGather" parameterType="Gather">
+		INSERT INTO GATHERING (ORDER_ID, CODE, TOTAL, GATHRING_USER, STATUS, REMARK, 
+			CREATE_USER, CREATE_DATE, GATHERING_DATE) VALUES 
+		(#{orderId}, #{code}, #{total}, #{gatherUser}, 0, #{remark}, #{createUser}, 
+			now(), #{gatherDate})
+	</insert>
+	
+	<update id="updateGather" parameterType="Gather">
+		UPDATE 
+			GATHERING 
+		SET 
+			TOTAL = #{total}, GATHRING_USER = #{gatherUser},  REMARK = #{remark}, GATHERING_DATE = #{gatherDate} 
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<delete id="deleteGather">
+		DELETE FROM GATHERING WHERE ID = #{id}
+	</delete>
+	
+	<update id="submitGather">
+		UPDATE GATHERING SET STATUS = 10 WHERE ID = #{id}
+	</update>
+	
+	<select id="getAuditGatherList" parameterType="GatherParam" resultType="Gather">
+		SELECT 
+			g.ID as id, 
+			g.CODE as code, 
+			o.ORDER_NO as orderNo, 
+			g.TOTAL as total, 
+			u.REALNAME as realname, 
+			g.GATHERING_DATE as gatherDate,
+			g.GATHRING_USER as gatherUser,
+			g.REMARK as remark,
+			g.STATUS as status 
+        FROM 
+        	GATHERING g left join T_ORDER o on g.ORDER_ID=o.ORDER_ID 
+        	left join SYS_USER u on g.GATHRING_USER=u.ID  
+		WHERE 1=1
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			<if test="orderName != null">
+				and o.ORDER_NAME like CONCAT('%',#{orderName},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signUser != null">
+				and o.ORDER_SIGNER = #{signUser}
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin}
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd}
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin}
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd}
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin}
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd}
+			</if>
+			<choose>
+				<when test="auditStatus == 0">
+					and g.STATUS = #{seeStatus}
+				</when>
+				<otherwise>
+					and g.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+		ORDER BY 
+			g.CREATE_DATE asc
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getTotal" parameterType="GatherParam" resultType="Integer">
+		SELECT 
+			count(1)
+        FROM 
+        	GATHERING g left join T_ORDER o on g.ORDER_ID=o.ORDER_ID 
+        	left join SYS_USER u on g.GATHRING_USER=u.ID  
+		WHERE 1=1
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			<if test="orderName != null">
+				and o.ORDER_NAME like CONCAT('%',#{orderName},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signUser != null">
+				and o.ORDER_SIGNER = #{signUser}
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin}
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd}
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin}
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd}
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin}
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd}
+			</if>
+			<choose>
+				<when test="auditStatus == 0">
+					and g.STATUS = #{seeStatus}
+				</when>
+				<otherwise>
+					and g.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+	</select>
+	
+	<select id="getHisGatherList" resultType="Gather">
+		SELECT 
+			g.ID as id, 
+			g.CODE as code, 
+			o.ORDER_NO as orderNo, 
+			g.TOTAL as total, 
+			u.REALNAME as realname, 
+			g.GATHERING_DATE as gatherDate,
+			g.GATHRING_USER as gatherUser,
+			g.REMARK as remark,
+			g.STATUS as status 
+		FROM 
+			GATHERING g left join T_ORDER o on g.ORDER_ID=o.ORDER_ID left join SYS_USER u on g.GATHRING_USER=u.ID  
+		WHERE 
+        	g.ORDER_ID in(SELECT g2.ORDER_ID FROM GATHERING g2 where g2.ID = #{id}) 
+        	AND 
+        	g.ID NOT IN(#{id}) 
+        	AND
+        	g.STATUS > 0
+        ORDER BY 
+        	g.GATHERING_DATE DESC
+	</select>
+	
+	<update id="submitAudit">
+		UPDATE GATHERING SET STATUS = #{status} WHERE ID = #{id}
+	</update>
+	
+	<select id="getGatherOrderById" resultType="GatherOrder">
+		SELECT 
+			o.ORDER_NO as orderNo,  
+			o.ORDER_CLIENT_NAME as clientName, 
+			o.ORDER_SIGN_DATE as signDate, 
+			u.REALNAME as signUser,
+			o.ORDER_TOTAL as total,
+			IFNULL(g.hadTotal,0) as hadTotal, 
+			IFNULL((o.ORDER_TOTAL - IFNULL(g.hadTotal,0)),0) as unTotal
+		FROM 
+			T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+			left join (
+                SELECT 
+                o.ORDER_ID, sum(g.TOTAL) as hadTotal
+                FROM 
+                T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+                left join GATHERING g on o.ORDER_ID = g.ORDER_ID
+                where 
+                o.ORDER_STATUS = 30     
+                group by 
+                o.order_id) g 
+        	on o.ORDER_ID = g.ORDER_ID
+		WHERE 
+        	o.ORDER_ID = #{orderId}
+	</select>
+	
+	<select id="getUnGatherTotal" resultType="Integer">
+		select count(1) from (
+			SELECT o.ORDER_ID 
+			FROM 
+			t_order o left join gathering g 
+			on o.ORDER_ID = g.ORDER_ID
+			where 
+				o.ORDER_STATUS = 30 
+			group by 
+			o.ORDER_TOTAL,o.ORDER_ID
+			having 
+			o.ORDER_TOTAL-IFNULL(sum(g.TOTAL),0)>0
+		)a
+	</select>
+	
+	<select id="getBackGatherTotal" resultType="Integer">
+		SELECT count(1) FROM gathering where STATUS = -5555
+	</select>
+	
+	<select id="getUnAuditGatherTotal" resultType="Integer">
+		SELECT count(1) FROM gathering where STATUS = #{seeStatus}
+	</select>
+	
+	<select id="getGathersByOrder" resultType="Gather">
+		SELECT 
+			g.ID as id, 
+			g.CODE as code, 
+			g.TOTAL as total,
+			u.REALNAME as realname, 
+			g.GATHERING_DATE as gatherDate, 
+			g.STATUS as status, 
+			g.REMARK as remark 
+		FROM 
+			gathering g left join SYS_USER u on g.GATHRING_USER=u.ID 
+		where 
+			g.ORDER_ID = #{orderId}
+	</select>
+</mapper>

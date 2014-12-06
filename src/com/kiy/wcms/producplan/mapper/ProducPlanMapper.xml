@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.producplan.mapper.ProducPlanMapper">
+	<insert id="save">
+		INSERT INTO PRODUCTIONPLAN (ORDER_ID, STATUS) VALUES (#{id}, 0)
+	</insert>
+	
+	<resultMap type="ProducPlan" id="producPlanMap">
+		<id property="id" column="pid"/>
+		<result property="productionComment" column="productionComment"/>
+		<result property="sailComment" column="sailComment"/>
+		<result property="status" column="pstatus"/>
+		<association property="order" column="orderId" autoMapping="true" javaType="Order"/>
+	</resultMap>
+	
+	<select id="getProducPlanList" parameterType="ProducPlanParam" resultMap="producPlanMap">
+		SELECT 
+			p.ID as  pid,
+			p.PRODUCTIONCOMMENT as productionComment,
+			p.SAILCOMMENT as sailComment,
+			p.STATUS as pstatus,
+			p.ORDER_ID as orderId,
+			o.ORDER_ID as id,
+			o.ORDER_NO as no,
+			o.ORDER_NAME as name,
+			o.ORDER_CLIENT_NAME as clientName,
+			o.LINKMAN as linkman,
+			o.PHONE as phone,
+			u.REALNAME as signerName,
+			o.ORDER_SIGN_DATE as signDate,
+			o.ORDER_PAY_DATE as payDate,
+			o.ORDER_TOTAL as total,
+			o.ORDER_PAY_PLACE as payPlace,
+			o.ORDER_WARRANTEE as warrantee,
+			o.ORDER_REMARK as remark
+		FROM 
+			PRODUCTIONPLAN p left join T_ORDER o on p.ORDER_ID = o.ORDER_ID left join SYS_USER u on o.ORDER_SIGNER = u.ID
+		WHERE
+			o.ORDER_STATUS = 30
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<if test="status != null">
+				and p.STATUS = #{status}
+			</if>
+		ORDER BY 
+			ORDER_CREATE_TIME DESC
+		limit #{begin},#{rows}
+	</select>
+	
+	<select id="getTotal" parameterType="ProducPlanParam" resultType="Integer">
+		SELECT 
+			count(p.ID)
+		FROM 
+			PRODUCTIONPLAN p left join T_ORDER o on p.ORDER_ID = o.ORDER_ID
+		<where>
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<if test="status != null">
+				and p.STATUS = #{status}
+			</if>
+		</where>
+	</select>
+	
+	<update id="saveTechParam" parameterType="OrderDetail">
+		UPDATE ORDER_PRO_DETAIL SET TECHNICALPARAM = #{technicalParam}, 
+			TECHNICALCOMMENT = #{technicalComment}, PROCUREMENTCOMMENT = #{procurementComment} 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="submitProducPlan">
+		UPDATE PRODUCTIONPLAN SET STATUS = 10 WHERE ID = #{id}
+	</update>
+	
+	<select id="getAuditList" resultMap="producPlanMap" parameterType="ProducPlanParam">
+		SELECT 
+			p.ID as  pid,
+			p.PRODUCTIONCOMMENT as productionComment,
+			p.SAILCOMMENT as sailComment,
+			p.STATUS as pstatus,
+			p.ORDER_ID as orderId,
+			o.ORDER_ID as id,
+			o.ORDER_NO as no,
+			o.ORDER_NAME as name,
+			o.ORDER_CLIENT_NAME as clientName,
+			o.LINKMAN as linkman,
+			o.PHONE as phone,
+			u.REALNAME as signerName,
+			o.ORDER_SIGN_DATE as signDate,
+			o.ORDER_PAY_DATE as payDate,
+			o.ORDER_TOTAL as total,
+			o.ORDER_PAY_PLACE as payPlace,
+			o.ORDER_WARRANTEE as warrantee,
+			o.ORDER_REMARK as remark
+		FROM 
+			PRODUCTIONPLAN p left join T_ORDER o on p.ORDER_ID = o.ORDER_ID left join SYS_USER u on o.ORDER_SIGNER = u.ID
+		<where>
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<choose>
+				<when test="auditStatus == 0"><!-- 未审批 -->
+					and p.STATUS = #{seeStatus}
+				</when>
+				<otherwise><!-- 已审批 -->
+					and p.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+		</where>
+		ORDER BY 
+			ORDER_CREATE_TIME DESC
+	</select>
+	
+	<select id="getAuditTotal" resultType="Integer" parameterType="ProducPlanParam">
+		SELECT 
+			count(1)
+		FROM 
+			PRODUCTIONPLAN p left join T_ORDER o on p.ORDER_ID = o.ORDER_ID
+		<where>
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<choose>
+				<when test="auditStatus == 0"><!-- 未审批 -->
+					and p.STATUS = #{seeStatus}
+				</when>
+				<otherwise><!-- 已审批 -->
+					and p.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<update id="submitAudit">
+		UPDATE PRODUCTIONPLAN SET STATUS = #{status} WHERE ID = #{id}
+	</update>
+	
+	<select id="getDetailIdList" resultType="Integer">
+		select 
+			o.ID 
+		from 
+			ORDER_PRO_DETAIL o left join PRODUCTIONPLAN p  on p.ORDER_ID = o.ORDER_ID
+		where 
+			p.ID = #{id}
+	</select>
+	
+	<select id="getBackTotal" resultType="Integer">
+		SELECT count(1) FROM productionplan where STATUS = -5555
+	</select>
+	
+	<select id="getUnPayTotal" resultType="Integer">
+		SELECT count(1) FROM productionplan where STATUS = 0
+	</select>
+	
+	<select id="getOrderByProId" resultType="Order">
+		SELECT 
+			o.ORDER_CLIENT_NAME as clientName,
+			o.ORDER_NO as no,
+			o.ORDER_SIGN_DATE as signDate,
+			u.REALNAME as signerName,
+			o.LINKMAN as linkman,
+			o.PHONE as phone,
+			o.ORDER_PAY_DATE as payDate,
+			o.ORDER_WARRANTEE as warrantee,
+			o.ORDER_PAY_PLACE as payPlace 
+		FROM 
+			t_order o left join sys_user u on o.ORDER_SIGNER = u.ID 
+		where 
+			ORDER_ID = (SELECT ORDER_ID FROM productionplan where ID = #{id})
+	</select>
+	
+	<select id="getOrderDetailListByProId" resultType="OrderDetail">
+		SELECT 
+			NAME as name,
+			MODEL as model,
+			QUANTITY as quantity,
+			TECHNICALPARAM as technicalParam,
+			TECHNICALCOMMENT as technicalComment,
+			PROCUREMENTCOMMENT as procurementComment 
+		FROM 
+			order_pro_detail 
+		where 
+			ORDER_ID = (SELECT ORDER_ID FROM productionplan where ID = #{id})
+	</select>
+</mapper>

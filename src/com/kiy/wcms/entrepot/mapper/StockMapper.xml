@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.entrepot.mapper.StockMapper">
+	<select id="getGoodsTotal" resultType="Double">
+		SELECT 
+			IFNULL(sum(QUANTITY),0) 
+		FROM 
+			STOCK 
+		WHERE 
+			GOODS_ID = #{goodsId}
+			AND
+			ENTREPOTID = #{entrepotId}
+			AND
+			SHELFID = #{shelfId}
+	</select>
+	
+	<insert id="save" parameterType="Stock">
+		INSERT INTO STOCK (GOODS_ID, ENTREPOTID, SHELFID, QUANTITY) VALUES
+			(#{goodsId}, #{entrepotId}, #{shelfId}, #{quantity})
+	</insert>
+	
+	<update id="update" parameterType="Stock">
+		UPDATE 
+			STOCK 
+		SET 
+			QUANTITY = #{quantity} 
+		WHERE 
+			GOODS_ID = #{goodsId} 
+			and 
+			ENTREPOTID = #{entrepotId} 
+			and 
+			SHELFID = #{shelfId}
+	</update>
+	
+	<select id="getGoodsStockByTid" resultType="Stock">
+		SELECT 
+			s.GOODS_ID as goodsId,
+			s.ENTREPOTID as entrepotId,
+			s.SHELFID as shelfId,
+			s.QUANTITY as quantity,
+			g.MODEL as goodsModel,
+			g.BRAND as goodsBrand,
+			g.NAME as goodsName,
+			u.UNIT_NAME as goodsUnitName,
+			e.NAME as entrepotName,
+			f.NAME as shelfName,
+			g.REMARK as remark 
+		FROM 
+			STOCK s left join GOODS_STORE g on s.GOODS_ID = g.ID 
+			left join ENTREPOT e on s.ENTREPOTID = e.ID 
+			left join SHELF f on s.SHELFID = f.ID
+			left join SYS_UNIT u on g.UNIT = u.UNIT_ID
+		WHERE
+			g.GOODS_TYPE in(
+				select ID from goods_type where ID = #{tid}
+				union
+				SELECT ID FROM goods_type WHERE PARENTID = #{tid})
+			<if test="name!=null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="code!=null">
+				and g.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="model!=null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			<if test="brand!=null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+		limit #{begin}, #{rows}
+	</select>
+	
+	<select id="getGoodsStockTotal" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM 
+			STOCK s left join GOODS_STORE g on s.GOODS_ID = g.ID 
+			left join ENTREPOT e on s.ENTREPOTID = e.ID 
+			left join SHELF f on s.SHELFID = f.ID
+		WHERE
+			g.GOODS_TYPE in(
+				select ID from goods_type where ID = #{tid}
+				union
+				SELECT ID FROM goods_type WHERE PARENTID = #{tid})
+			<if test="name!=null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="code!=null">
+				and g.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="model!=null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			<if test="brand!=null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+	</select>
+</mapper>

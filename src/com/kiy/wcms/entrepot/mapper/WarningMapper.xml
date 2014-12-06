@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.entrepot.mapper.WarningMapper">
+	<insert id="save" parameterType="WarningSetting">
+		INSERT INTO STOCKWARNING (GOODS_ID, QUANTITY) VALUES (#{goodsId}, #{quantity});
+	</insert>
+	
+	<select id="getWarningSettingList" resultType="WarningSetting">
+		SELECT 
+			s.ID as id,
+			g.NAME as goodsName,
+			g.MODEL as goodsModel,
+			g.BRAND as goodsBrand,
+			s.QUANTITY as quantity 
+		FROM 
+			STOCKWARNING s left join GOODS_STORE g on s.GOODS_ID = g.ID
+		<where>
+			<if test="goodsName!=null">
+				and g.NAME like CONCAT('%',#{goodsName},'%')
+			</if>
+			<if test="goodsModel!=null">
+				and g.MODEL like CONCAT('%',#{goodsModel},'%')
+			</if>
+			<if test="goodsBrand!=null">
+				and g.BRAND like CONCAT('%',#{goodsBrand},'%')
+			</if>
+		</where>
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getWarningSettingTotal" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM 
+			STOCKWARNING s left join GOODS_STORE g on s.GOODS_ID = g.ID
+		<where>
+			<if test="goodsName!=null">
+				and g.NAME like CONCAT('%',#{goodsName},'%')
+			</if>
+			<if test="goodsModel!=null">
+				and g.MODEL like CONCAT('%',#{goodsModel},'%')
+			</if>
+			<if test="goodsBrand!=null">
+				and g.BRAND like CONCAT('%',#{goodsBrand},'%')
+			</if>
+		</where>
+	</select>
+	
+	<select id="getWarningList" resultType="Warning">
+		SELECT 
+			g.NAME as goodsName,
+			g.MODEL as goodsModel,
+			g.BRAND as goodsBrand,
+			u.UNIT_NAME as goodsUnitName,
+			w.QUANTITY as warningQuantity,
+			s.STOCK_QUANTITY as stockQuantity 
+		FROM 
+			STOCKWARNING w left join (select s1.GOODS_ID, sum(s1.QUANTITY) as STOCK_QUANTITY from STOCK s1 group by s1.GOODS_ID) s 
+				on w.GOODS_ID = s.GOODS_ID 
+        	left join GOODS_STORE g on w.GOODS_ID = g.ID left join SYS_UNIT u on g.UNIT = u.UNIT_ID
+		WHERE 
+			s.STOCK_QUANTITY &lt;= w.QUANTITY
+			<if test="goodsName!=null">
+				and g.NAME like CONCAT('%',#{goodsName},'%')
+			</if>
+			<if test="goodsModel!=null">
+				and g.MODEL like CONCAT('%',#{goodsModel},'%')
+			</if>
+			<if test="goodsBrand!=null">
+				and g.BRAND like CONCAT('%',#{goodsBrand},'%')
+			</if>
+	</select>
+	
+	<select id="getWarningTotal" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM 
+			STOCKWARNING w left join (select s1.GOODS_ID, sum(s1.QUANTITY) as STOCK_QUANTITY from STOCK s1 group by s1.GOODS_ID) s 
+				on w.GOODS_ID = s.GOODS_ID 
+        	left join GOODS_STORE g on w.GOODS_ID = g.ID left join SYS_UNIT u on g.UNIT = u.UNIT_ID
+		WHERE 
+			s.STOCK_QUANTITY &lt;= w.QUANTITY
+			<if test="goodsName!=null">
+				and g.NAME like CONCAT('%',#{goodsName},'%')
+			</if>
+			<if test="goodsModel!=null">
+				and g.MODEL like CONCAT('%',#{goodsModel},'%')
+			</if>
+			<if test="goodsBrand!=null">
+				and g.BRAND like CONCAT('%',#{goodsBrand},'%')
+			</if>
+	</select>
+	
+	<delete id="delete">
+		DELETE FROM STOCKWARNING WHERE ID = #{id}
+	</delete>
+</mapper>

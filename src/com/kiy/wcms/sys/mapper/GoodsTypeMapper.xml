@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.sys.mapper.GoodsTypeMapper">
+	<select id="getParentList" resultType="GoodsType">
+		SELECT 
+			ID as id, 
+			NAME as text 
+		FROM 
+			GOODS_TYPE
+		WHERE
+			PARENTID IS NULL
+	</select>
+	
+	<select id="getTotal" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM 
+			GOODS_TYPE
+	</select>
+	
+	<select id="getGoodsTypeList" resultType="GoodsType">
+		SELECT 
+			ID as id, 
+			NAME as text 
+		FROM 
+			GOODS_TYPE
+		WHERE
+			PARENTID = #{pid}
+	</select>
+	
+	<insert id="save" parameterType="GoodsType">
+		INSERT INTO GOODS_TYPE (NAME, PARENTID) VALUES (#{text}, #{pid})
+	</insert>
+	
+	<resultMap type="GoodsType" id="goodsTypeMap">
+		<id property="id" column="id"/>
+		<result property="text" column="text"/>
+		<collection property="children" select="getChildTypeList" column="id" ofType="GoodsType"/>
+	</resultMap>
+	
+	<resultMap type="GoodsType" id="childTypeMap">
+		<id property="id" column="id"/>
+		<result property="text" column="text"/>
+	</resultMap>
+	
+	<select id="getList" resultMap="goodsTypeMap">
+		SELECT 
+			ID as id, 
+			NAME as text 
+		FROM 
+			GOODS_TYPE
+		WHERE
+			PARENTID IS NULL
+	</select>
+	
+	<select id="getChildTypeList" resultMap="childTypeMap">
+		SELECT 
+			ID as id, 
+			NAME as text 
+		FROM 
+			GOODS_TYPE
+		WHERE
+			PARENTID = #{id}
+	</select>
+</mapper> 

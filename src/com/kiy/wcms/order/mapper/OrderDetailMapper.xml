@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.order.mapper.OrderDetailMapper">
+	<insert id="save" parameterType="OrderDetail">
+		INSERT INTO 
+			ORDER_PRO_DETAIL 
+			(NAME, MODEL, QUANTITY, UNIT, UNIT_PRICE, TOTAL, REMARK, ORDER_ID) 
+		VALUES
+			(#{name}, #{model}, #{quantity}, #{unitId}, #{unitPrice}, #{total}, #{remark}, #{orderId})
+	</insert>
+	
+	<select id="getOrderDetailList" resultType="OrderDetail">
+		SELECT 
+			o.ID as id,
+			o.NAME as name,
+			o.MODEL as model,
+			o.QUANTITY as quantity,
+			o.UNIT as unitId,
+			u.UNIT_NAME as unitName,
+			o.UNIT_PRICE as unitPrice,
+			o.TOTAL as total,
+			o.REMARK as remark,
+			o.ORDER_ID as orderId,
+			o.TECHNICALPARAM as technicalParam,
+			o.TECHNICALCOMMENT as technicalComment,
+			o.PROCUREMENTCOMMENT as procurementComment
+		FROM 
+			ORDER_PRO_DETAIL o left join SYS_UNIT u on o.UNIT = u.UNIT_ID 
+		WHERE 
+			o.ORDER_ID = #{orderId}
+	</select>
+	
+	<delete id="delete">
+		DELETE FROM ORDER_PRO_DETAIL WHERE ID = #{detailId}
+	</delete>
+	
+	<update id="update" parameterType="OrderDetail">
+		UPDATE 
+			ORDER_PRO_DETAIL 
+		SET 
+			NAME = #{name}, 
+			MODEL = #{model}, 
+			QUANTITY = #{quantity}, 
+			UNIT = #{unitId}, 
+			UNIT_PRICE = #{unitPrice}, 
+			TOTAL = #{total}, 
+			REMARK = #{remark} 
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<delete id="deleteByOrderId">
+		DELETE FROM ORDER_PRO_DETAIL WHERE ORDER_ID = #{id}
+	</delete>
+</mapper>

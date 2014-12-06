@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.design.mapper.DesignMapper">
+	<insert id="batchSave">
+		INSERT INTO DESIGN (ORDER_DETAIL_ID, PRODUCTIONPLAN_ID) VALUES 
+		<foreach collection="idList" item="detailId" separator=",">
+			(#{detailId}, #{id})
+		</foreach>
+	</insert>
+	
+	<select id="getDesignList" parameterType="DesignParam" resultType="Design">
+		SELECT 
+			d.ID as id,
+			o.ORDER_NO as orderNo,
+			o.ORDER_NAME as orderName,
+			o.ORDER_CLIENT_NAME as clientName,
+			p.NAME as name,
+			p.MODEL as model,
+			p.TECHNICALPARAM as techParam,
+			p.QUANTITY as quantity,
+			u.UNIT_NAME as unitName,
+			d.STATUS as status
+		FROM 
+			DESIGN d left join ORDER_PRO_DETAIL p on d.ORDER_DETAIL_ID = p.ID 
+				left join T_ORDER o on p.ORDER_ID = o.ORDER_ID 
+				left join SYS_UNIT u on p.UNIT = u.UNIT_ID
+		<where>
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="name != null">
+				and p.NAME like CONCAT('%', #{name} ,'%')
+			</if>
+			
+			<if test="model != null">
+				and p.MODEL like CONCAT('%', #{model} ,'%')
+			</if>
+			
+			<if test="status != null">
+				and d.STATUS = #{status}
+			</if>
+		</where>
+		order by 
+			d.STATUS DESC, o.ORDER_CREATE_TIME DESC
+		limit #{begin}, #{rows}
+	</select>
+	
+	<select id="getTotal" parameterType="DesignParam" resultType="Integer">
+		SELECT 
+			count(1)
+		FROM 
+			DESIGN d left join ORDER_PRO_DETAIL p on d.ORDER_DETAIL_ID = p.ID 
+				left join T_ORDER o on p.ORDER_ID = o.ORDER_ID
+		<where>
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="name != null">
+				and p.NAME like CONCAT('%', #{name} ,'%')
+			</if>
+			
+			<if test="model != null">
+				and p.MODEL like CONCAT('%', #{model} ,'%')
+			</if>
+			
+			<if test="status != null">
+				and d.STATUS = #{status}
+			</if>
+		</where>
+	</select>
+	
+	<update id="submitDesign">
+		UPDATE DESIGN SET STATUS = 10 WHERE ID = #{id}
+	</update>
+	
+	<select id="getAuditDesignList" resultType="Design" parameterType="DesignParam">
+		SELECT 
+			d.ID as id,
+			o.ORDER_NO as orderNo,
+			o.ORDER_NAME as orderName,
+			o.ORDER_CLIENT_NAME as clientName,
+			p.NAME as name,
+			p.MODEL as model,
+			p.TECHNICALPARAM as techParam,
+			p.QUANTITY as quantity,
+			u.UNIT_NAME as unitName,
+			d.STATUS as status
+		FROM 
+			DESIGN d left join ORDER_PRO_DETAIL p on d.ORDER_DETAIL_ID = p.ID 
+				left join T_ORDER o on p.ORDER_ID = o.ORDER_ID 
+				left join SYS_UNIT u on p.UNIT = u.UNIT_ID
+		<where>
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="name != null">
+				and p.NAME like CONCAT('%', #{name} ,'%')
+			</if>
+			
+			<if test="model != null">
+				and p.MODEL like CONCAT('%', #{model} ,'%')
+			</if>
+			
+			<choose>
+				<when test="auditStatus == 0">
+					and d.STATUS = #{seeStatus}
+				</when>
+				<otherwise>
+					and d.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+		</where>
+		order by 
+			d.STATUS DESC, o.ORDER_CREATE_TIME DESC
+		limit #{begin}, #{rows}
+	</select>
+	
+	<select id="getAuditTotal" resultType="Integer" parameterType="DesignParam">
+		SELECT 
+			count(1)
+		FROM 
+			DESIGN d left join ORDER_PRO_DETAIL p on d.ORDER_DETAIL_ID = p.ID 
+				left join T_ORDER o on p.ORDER_ID = o.ORDER_ID 
+				left join SYS_UNIT u on p.UNIT = u.UNIT_ID
+		<where>
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			
+			<if test="name != null">
+				and p.NAME like CONCAT('%', #{name} ,'%')
+			</if>
+			
+			<if test="model != null">
+				and p.MODEL like CONCAT('%', #{model} ,'%')
+			</if>
+			
+			<choose>
+				<when test="auditStatus == 0">
+					and d.STATUS = #{seeStatus}
+				</when>
+				<otherwise>
+					and d.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<update id="submitAudit">
+		UPDATE DESIGN SET STATUS = #{status} WHERE ID = #{id}
+	</update>
+	
+	<select id="getBackTotal" resultType="Integer">
+		SELECT count(1) FROM design where STATUS = -5555
+	</select>
+	
+	<select id="getUnPayTotal" resultType="Integer">
+		SELECT count(1) FROM design where STATUS = 0
+	</select>
+</mapper>

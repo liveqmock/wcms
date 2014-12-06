@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.entrepot.mapper.ShelfMapper">
+	<select id="getShelfsByEid" resultType="Shelf">
+		SELECT 
+			ID as id, 
+			NAME as name, 
+			CODE as code 
+		FROM 
+			SHELF 
+		WHERE 
+			ENTREPOT_ID = #{eid}
+		LIMIT
+			#{begin}, #{rows}
+	</select>
+	
+	<select id="getTotalByEid" resultType="Integer">
+		SELECT 
+			count(1)
+		FROM 
+			SHELF 
+		WHERE 
+			ENTREPOT_ID = #{eid}
+	</select>
+	
+	<insert id="save" parameterType="Shelf">
+		INSERT INTO SHELF (ENTREPOT_ID, NAME, CODE) VALUES (#{entrepotId}, #{name}, #{code})
+	</insert>
+	
+	<update id="update" parameterType="Shelf">
+		UPDATE SHELF SET NAME = #{name}, CODE = #{code} WHERE ID = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM SHELF WHERE ID = #{id}
+	</delete>
+	
+	<select id="getAllShelfsByEid" resultType="Shelf">
+		SELECT 
+			ID as id, 
+			NAME as name
+		FROM 
+			SHELF 
+		WHERE 
+			ENTREPOT_ID = #{eid}
+	</select>
+</mapper>

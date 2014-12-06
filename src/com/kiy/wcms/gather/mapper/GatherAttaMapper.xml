@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.gather.mapper.GatherAttaMapper">
+	<insert id="saveGatherAtta">
+		INSERT INTO GATHERING_ATTA (GATHERING_ID, FILEPATH, FILENAME) VALUES
+			(#{gatherId}, #{path}, #{name})
+	</insert>
+	
+	<select id="getGatherAttaList" resultType="GatherAtta">
+		SELECT 
+			ID as id, 
+			FILENAME as fileName
+		FROM 
+			GATHERING_ATTA 
+		WHERE 
+			GATHERING_ID = #{id}
+	</select>
+	
+	<select id="getAttaPath" resultType="String">
+		SELECT 
+			FILEPATH
+		FROM 
+			GATHERING_ATTA 
+		WHERE 
+			ID = #{id}
+	</select>
+	
+	<delete id="deleteGatherAtta">
+		DELETE FROM GATHERING_ATTA WHERE ID = #{id}
+	</delete>
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.design.mapper.MaterialListMapper">
+	<insert id="save" parameterType="MaterialList">
+		INSERT INTO 
+			MATERIALLIST (DESIGN_ID, NAME, DENSITY, CACULATIONSBASE, SINGLEQUALITY, AMOUNT, 
+				MATERIALTOTALQUALITY, REMARK, model, UNITNAME) 
+		VALUES
+			(#{designId}, #{name}, #{density}, #{caculationsBase}, #{singleQuantity}, #{amount}, #{totalQuantity},
+				#{remark}, #{model}, #{unitName}) 
+	</insert>
+	
+	<select id="getMaterList" resultType="MaterialList">
+		SELECT 
+			ID as id,
+			DESIGN_ID as designId,
+			NAME as name,
+			DENSITY as density,
+			UNITNAME as unitName,
+			CACULATIONSBASE as caculationsBase,
+			SINGLEQUALITY as singleQuantity,
+			AMOUNT as amount,
+			MATERIALTOTALQUALITY as totalQuantity,
+			REMARK as remark,
+			model as model	 
+		FROM 
+			MATERIALLIST 
+		WHERE 
+			DESIGN_ID = #{id}
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getTotal" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM 
+			MATERIALLIST 
+		WHERE 
+			DESIGN_ID = #{id}
+	</select>
+	
+	<update id="update" parameterType="MaterialList">
+		UPDATE 
+			MATERIALLIST 
+		SET 
+			NAME = #{name}, 
+			DENSITY = #{density}, 
+			UNITNAME = #{unitName}, 
+			CACULATIONSBASE = #{caculationsBase}, 
+			SINGLEQUALITY = #{singleQuantity}, 
+			AMOUNT = #{amount}, 
+			MATERIALTOTALQUALITY = #{totalQuantity}, 
+			REMARK = #{remark}, 
+			model = #{model} 
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM MATERIALLIST WHERE ID = #{id}
+	</delete>
+</mapper>

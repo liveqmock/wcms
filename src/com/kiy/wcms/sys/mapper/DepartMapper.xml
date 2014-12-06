@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.sys.mapper.DepartMapper">
+	<resultMap type="DepartTree" id="deptTreeMap">
+		<id property="id" column="id"/>
+		<result property="text" column="text"/>
+		<collection property="children" ofType="DepartTree" column="id" select="getChildDepts"></collection>
+	</resultMap>
+	
+	<select id="getDeptTree" resultMap="deptTreeMap">
+		SELECT 
+			D_ID as id, 
+			D_NAME as text 
+		FROM 
+			SYS_DEPARTMENT 
+		where 
+			PID = 0
+		ORDER BY
+			ORDERNO ASC
+	</select>
+	
+	<select id="getChildDepts" resultMap="deptTreeMap">
+		SELECT 
+			D_ID as id, 
+			D_NAME as text 
+		FROM 
+			SYS_DEPARTMENT 
+		where 
+			PID = #{id}
+		ORDER BY
+			ORDERNO ASC
+	</select>
+	
+	<select id="getDeptsByPid" resultType="Department">
+		SELECT 
+			D_ID as id, 
+			D_CODE as code, 
+			D_NAME as name, 
+			D_DESC as sdesc, 
+			ORDERNO as orderNo
+		FROM 
+			SYS_DEPARTMENT 
+		where 
+			PID = #{pid}
+		ORDER BY
+			ORDERNO ASC
+	</select>
+	
+	<insert id="save" parameterType="Department">
+		INSERT INTO SYS_DEPARTMENT (D_CODE, D_NAME, D_ISDISABLE, D_DESC, PID, ORDERNO) VALUES
+			(#{code}, #{name}, #{isDisable}, #{sdesc}, #{pid}, #{orderNo})
+	</insert>
+	
+	<update id="update" parameterType="Department">
+		UPDATE 
+			SYS_DEPARTMENT 
+		SET 
+			D_CODE = #{code}, 
+			D_NAME = #{name}, 
+			D_DESC = #{sdesc},  
+			ORDERNO = #{orderNo} 
+		WHERE 
+			D_ID = #{id}
+	</update>
+</mapper>

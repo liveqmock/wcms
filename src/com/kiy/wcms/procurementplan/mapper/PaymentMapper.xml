@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.procurementplan.mapper.PaymentMapper">
+	<select id="getContractList" resultType="Contract">
+		SELECT  
+			c.ID as id,
+			c.CODE as code, 
+			c.NAME as name, 
+			c.SUPPLIER as supplier, 
+			from_unixtime(left(c.SIGNDATE,10),'%Y-%m-%d') as signDateStr,
+			u.REALNAME as signUserName, 
+			c.SUM as sum,
+			IFNULL(sum(p.TOTAL),0) as hadPay, 
+			c.SUM-IFNULL(sum(p.TOTAL),0) as unPay,
+			IFNULL(sum(p.BILL),0) as hadBill,
+        	c.SUM - IFNULL(sum(p.BILL),0) as unBill
+		FROM 
+			PROCUREMENT_CONTRACT c left join SYS_USER u on c.SIGNUSER = u.ID 
+			left join PAYMENT p on c.ID = p.CONTRACT_ID
+		WHERE 
+			c.STATUS = 30
+		group by 
+			c.ID,c.CODE, c.NAME, c.SUPPLIER, c.SIGNDATE, u.REALNAME, c.SUM
+		order by 
+			c.SIGNDATE desc
+	</select>
+	
+	<select id="getContractTotal" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM(
+			SELECT 
+				c.ID,c.CODE, c.NAME, c.SUPPLIER, c.SIGNDATE, u.REALNAME, c.SUM ,sum(p.TOTAL), c.SUM-sum(p.TOTAL)
+			FROM 
+				PROCUREMENT_CONTRACT c left join SYS_USER u on c.SIGNUSER = u.ID 
+				left join PAYMENT p on c.ID = p.CONTRACT_ID
+			WHERE 
+				c.STATUS = 30
+			group by 
+				c.ID,c.CODE, c.NAME, c.SUPPLIER, c.SIGNDATE, u.REALNAME, c.SUM
+			order by 
+				c.SIGNDATE desc
+			) b
+	</select>
+	
+	<select id="getPaymentList" resultType="Payment">
+		SELECT 
+			p.ID as id,
+			u.REALNAME as applyUserName,
+			from_unixtime(left(p.APPLYDATE,10),'%Y-%m-%d') as applyDateStr,
+			p.APPLYREASON as applyReason,
+			p.ACCOUNTNAME as accountName,
+			p.ACCOUNTNO as accountNo,
+			p.REMARK as remark,
+			p.TOTAL as total,
+			p.CODE as code,
+			p.STATUS as status,
+			p.BILL as bill 
+		FROM 
+			PAYMENT p left join SYS_USER u on p.APPLYUSER = u.ID
+		WHERE 
+			CONTRACT_ID = #{contractId}
+		ORDER BY 
+			p.CREATEDATE DESC
+	</select>
+	
+	<insert id="savePayment" parameterType="Payment">
+		INSERT INTO 
+			payment (CONTRACT_ID, APPLYUSER, APPLYDATE, APPLYREASON, ACCOUNTNAME, 
+				ACCOUNTNO, CREATEUSER, CREATEDATE, REMARK, TOTAL, CODE, STATUS, BILL) 
+		VALUES
+			(#{contractId}, #{applyUser}, #{applyDate}, #{applyReason}, #{accountName},
+				#{accountNo}, #{createUser}, #{createDate}, #{remark}, #{total}, #{code}, 0, #{bill}) 
+	</insert>
+	
+	<select id="getNextNo" resultType="Integer">
+		SELECT max(right(CODE,4)) FROM PAYMENT
+	</select>
+	
+	<update id="update" parameterType="Payment">
+		UPDATE 
+			payment 
+		SET 
+			APPLYDATE = #{applyDate}, APPLYREASON = #{applyReason}, ACCOUNTNAME = #{accountName}, 
+			ACCOUNTNO = #{accountNo}, REMARK = #{remark}, TOTAL = #{total}, BILL = #{bill} 
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM payment WHERE ID = #{id}
+	</delete>
+	
+	<update id="submit">
+		UPDATE payment SET STATUS = 10 WHERE ID = #{id}
+	</update>
+	
+	<select id="getAuditList" parameterType="PaymentParam" resultType="Payment">
+		SELECT 
+			p.ID as id,
+			p.REMARK as remark,
+			c.CODE as contractCode,
+			p.CODE as code,
+			p.TOTAL total,
+			from_unixtime(left(p.APPLYDATE,10),'%Y-%m-%d') as applyDateStr,
+			u.REALNAME as applyUserName,
+			p.STATUS as status,
+			c.SUM as contractSum,
+			p.BILL as bill,
+			c.SUM - sum(p2.BILL) as unBill
+		FROM 
+			payment p left join procurement_contract c on p.CONTRACT_ID = c.ID left join 
+				sys_user u on p.APPLYUSER = u.ID left join payment p2 on p.ID = p2.ID
+		WHERE
+			1 = 1
+		<if test="contractNo != null">
+			and c.CODE like CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="contractName != null">
+			and c.NAME like CONCAT('%',#{contractName},'%')
+		</if>
+		<if test="supplierName != null">
+			and c.SUPPLIER like CONCAT('%',#{supplierName},'%')
+		</if>
+		<if test="signUser != null">
+			and c.SIGNUSER = #{signUser}
+		</if>
+		<if test="signDateBegin != null">
+			and c.SIGNDATE >= #{signDateBegin}
+		</if>
+		<if test="signDateEnd != null">
+			and c.signDateEnd &lt;= #{signDateEnd}
+		</if>
+		<if test="receiveDateBegin != null">
+			and c.RECEIVETIME >= #{receiveDateBegin}
+		</if>
+		<if test="receiveDateEnd != null">
+			and c.RECEIVETIME &lt;= #{receiveDateEnd}
+		</if>
+		<if test="totalBegin != null">
+			and c.SUM >= #{totalBegin}
+		</if>
+		<if test="totalEnd != null">
+			and c.SUM &lt;= ##{totalEnd}
+		</if>
+		<choose>
+			<when test="auditStatus == 0">
+				and p.STATUS = #{seeStatus}
+			</when>
+			<otherwise>
+				and p.STATUS > #{seeStatus}
+			</otherwise>
+		</choose>
+		group by 
+        	p.id,  p.REMARK, c.CODE, p.CODE, p.TOTAL, p.APPLYDATE, u.REALNAME,  p.STATUS, c.SUM, p.BILL
+	</select>
+	
+	<select id="getAuditTotal" resultType="Integer" parameterType="PaymentParam">
+		SELECT 
+			count(1) 
+		FROM 
+			payment p left join procurement_contract c on p.CONTRACT_ID = c.ID left join 
+				sys_user u on p.APPLYUSER = u.ID
+		WHERE
+			1 = 1
+		<if test="contractNo != null">
+			and c.CODE like CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="contractName != null">
+			and c.NAME like CONCAT('%',#{contractName},'%')
+		</if>
+		<if test="supplierName != null">
+			and c.SUPPLIER like CONCAT('%',#{supplierName},'%')
+		</if>
+		<if test="signUser != null">
+			and c.SIGNUSER = #{signUser}
+		</if>
+		<if test="signDateBegin != null">
+			and c.SIGNDATE >= #{signDateBegin}
+		</if>
+		<if test="signDateEnd != null">
+			and c.signDateEnd &lt;= #{signDateEnd}
+		</if>
+		<if test="receiveDateBegin != null">
+			and c.RECEIVETIME >= #{receiveDateBegin}
+		</if>
+		<if test="receiveDateEnd != null">
+			and c.RECEIVETIME &lt;= #{receiveDateEnd}
+		</if>
+		<if test="totalBegin != null">
+			and c.SUM >= #{totalBegin}
+		</if>
+		<if test="totalEnd != null">
+			and c.SUM &lt;= ##{totalEnd}
+		</if>
+		<choose>
+			<when test="auditStatus == 0">
+				and p.STATUS = #{seeStatus}
+			</when>
+			<otherwise>
+				and p.STATUS > #{seeStatus}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getHisPaymentList" resultType="Payment">
+		SELECT 
+			p.CODE as code,
+			c.CODE as contractCode,
+			p.TOTAL as total,
+			from_unixtime(left(p.APPLYDATE,10),'%Y-%m-%d') as applyDateStr,
+			p.STATUS as status,
+			u.REALNAME as applyUserName 
+		FROM 
+			payment p left join procurement_contract c on p.CONTRACT_ID = c.ID left join 
+			sys_user u on p.APPLYUSER = u.ID
+		WHERE
+			p.CONTRACT_ID = (select p2.CONTRACT_ID from payment p2 where p2.ID = #{id})
+			and p.ID not in(#{id})
+	</select>
+	
+	<update id="submitAudit">
+		UPDATE payment SET STATUS = #{status} WHERE ID = #{id} 
+	</update>
+	
+	<select id="getUnPayTotal" resultType="Integer">
+		select count(1) from (
+			SELECT c.ID FROM procurement_contract c left join payment p on c.ID = p.CONTRACT_ID  
+			where c.STATUS = 30
+			group by c.SUM,c.ID
+			having c.SUM-IFNULL(sum(p.TOTAL),0)>0
+		)a
+	</select>
+	
+	<select id="getBackTotal" resultType="Integer">
+		SELECT count(1) FROM payment where STATUS = -5555
+	</select>
+	
+	<select id="getPaymentById" resultType="Payment">
+		SELECT 
+			d.D_NAME as departName,
+			u.REALNAME as applyUserName,
+			from_unixtime(left(p.APPLYDATE,10),'%Y-%m-%d') as applyDateStr,
+			p.REMARK as remark,
+			p.APPLYREASON as applyReason,
+			p.ACCOUNTNAME as accountName,
+			p.ACCOUNTNO as accountNo,
+			p.CODE as code
+		FROM 
+			payment p 
+			left join sys_user u on p.APPLYUSER = u.ID 
+			left join sys_department d on u.DEPTID=d.D_ID
+		WHERE 
+			p.ID = #{id}
+	</select>
+</mapper>

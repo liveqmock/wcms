@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.gather.mapper.DeliveryMapper">
+	<select id="getNextNo" resultType="Integer">
+		SELECT max(right(CODE,3)) FROM DELIVERY
+	</select>
+	
+	<insert id="save" parameterType="Delivery">
+		INSERT INTO DELIVERY (SHIPMENTID, CODE, STATUS) VALUES(#{shipmentId}, #{code}, 1)
+	</insert>
+	
+	<select id="getList" parameterType="GatherParam" resultType="Delivery">
+		SELECT 
+			d.ID as id,
+			d.SHIPMENTID as shipmentId,
+			d.CODE as code,
+			o.ORDER_NO as orderNo,
+			o.ORDER_CLIENT_NAME as clientName,
+			o.ORDER_PAY_PLACE as payPlace,
+			o.LINKMAN as clientLinkman,
+			o.PHONE as clientLinkPhone,
+			d.LINKMAN as linkman,
+			u.REALNAME as linkmanName,
+			d.SHIPMENTDATE as shipmentDate,
+			d.PHONE as phone,
+			d.FOX as fox,
+			d.MOBILE as mobile,
+			d.REMARK as remark,
+			d.STATUS as status
+		FROM 
+			DELIVERY d left join SHIPMENTS s on d.SHIPMENTID = s.ID 
+			left join T_ORDER o on s.ORDER_ID = o.ORDER_ID left join SYS_USER u on d.LINKMAN = u.ID
+		WHERE 
+			o.ORDER_STATUS = 30
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			<if test="orderName != null">
+				and o.ORDER_NAME like CONCAT('%',#{orderName},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signUser != null">
+				and o.ORDER_SIGNER = #{signUser}
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin}
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd}
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin}
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd}
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin}
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd}
+			</if>
+			<if test="status != null">
+				<if test="status != 0">
+					and d.STATUS = #{status}
+				</if>
+			</if>
+		ORDER BY 
+			d.SHIPMENTDATE desc
+		limit 
+			#{begin}, #{rows}
+	</select>
+	
+	<select id="getTotal" parameterType="GatherParam" resultType="Integer">
+		SELECT 
+			count(1)
+		FROM 
+			DELIVERY d left join SHIPMENTS s on d.SHIPMENTID = s.ID 
+			left join T_ORDER o on s.ORDER_ID = o.ORDER_ID
+		WHERE 
+			o.ORDER_STATUS = 30
+			<if test="orderNo != null">
+				and o.ORDER_NO like CONCAT('%',#{orderNo},'%')
+			</if>
+			<if test="orderName != null">
+				and o.ORDER_NAME like CONCAT('%',#{orderName},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signUser != null">
+				and o.ORDER_SIGNER = #{signUser}
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin}
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd}
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin}
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd}
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin}
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd}
+			</if>
+			<if test="status != null">
+				<if test="status != 0">
+					and d.STATUS = #{status}
+				</if>
+			</if>
+	</select>
+	
+	<update id="update" parameterType="Delivery">
+		UPDATE 
+			DELIVERY 
+		SET 
+			SHIPMENTDATE = #{shipmentDate}, 
+			PHONE = #{phone}, 
+			FOX = #{fox}, 
+			LINKMAN = #{linkman}, 
+			MOBILE = #{mobile}, 
+			REMARK = #{remark} 
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<update id="effectDelivery">
+		UPDATE DELIVERY SET STATUS=2 WHERE ID = #{id}
+	</update>
+	
+	<select id="getUnPayTotal" resultType="Integer">
+		SELECT count(1) FROM delivery where STATUS = 1
+	</select>
+	
+	<select id="getDeliveryById" resultType="Delivery">
+		SELECT 
+			o.ORDER_CLIENT_NAME as clientName,
+			o.LINKMAN as clientLinkman,
+			d.CODE as code,
+			o.ORDER_PAY_PLACE as payPlace,
+			o.PHONE as clientLinkPhone,
+			d.SHIPMENTDATE as shipmentDate,
+			d.PHONE as phone,
+			d.FOX as fox,
+			d.MOBILE as mobile,
+			u.REALNAME as linkmanName
+		FROM 
+			delivery d left join shipments s on  d.SHIPMENTID=s.ID left join t_order o on s.ORDER_ID = o.ORDER_ID left join sys_user u on d.LINKMAN = u.ID
+		where 
+			d.ID = #{id}
+	</select>
+	
+	<select id="getShipDetailsByDeliId" resultType="ShipmentsDetail">
+		SELECT 
+			od.NAME as name, 
+			od.MODEL as model,
+			u.UNIT_NAME as unitName, 
+			sd.AMOUNT as amount
+		FROM 
+			shipments_detail sd left join order_pro_detail od on sd.ORDER_DETAIL_ID = od.ID left join sys_unit u on od.UNIT = u.UNIT_ID
+		WHERE 
+			sd.SHIPMENTSID = (SELECT SHIPMENTID FROM delivery WHERE ID = #{id})
+	</select>
+</mapper>

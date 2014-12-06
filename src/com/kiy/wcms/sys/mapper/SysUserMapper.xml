@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.sys.mapper.SysUserMapper">
+	<resultMap type="SysUser" id="sysUserMap">
+		<id property="id" column=""/>
+		<result property="username" column="USERNAME"/>
+		<result property="password" column="PASSWORD"/>
+		<result property="salt" column="SALT"/>
+		<result property="realname" column="REALNAME"/>
+		<result property="isdisable" column="ISDISABLE"/>
+		<result property="email" column="EMAIL"/>
+		<result property="createDate" column="CREATE_TIME"/>
+		<result property="lastLoginDate" column="LAST_LOGIN_TIME"/>
+	</resultMap>
+	
+	<select id="getUserByUsername" resultMap="sysUserMap">
+		select * from SYS_USER WHERE USERNAME = #{username}
+	</select>
+	
+	<update id="update" parameterType="SysUser">
+		update SYS_USER 
+		<set>
+			PASSWORD = #{password},
+			REALNAME = #{realname},
+			EMAIL = #{email},
+			ISDISABLE = #{isdisable}
+		</set>
+		where ID = #{id}
+	</update>
+	
+	<select id="getUsersByDeptId" resultType="SysUser">
+		SELECT 
+			u.ID as id,
+			u.USERNAME as username,
+			u.REALNAME as realname, 
+			u.EMAIL as email, 
+			u.ISDISABLE as isdisable, 
+			u.CREATE_TIME as createDate, 
+			u.DEPTID as deptId,
+			u.SALT as salt,
+			d.D_NAME as deptName 
+		FROM 
+			SYS_USER u left join SYS_DEPARTMENT d on u.DEPTID = d.D_ID
+		WHERE u.DEPTID = #{deptId}
+		limit #{begin},#{rows}
+	</select>
+	
+	<select id="getTotal" resultType="Integer">
+		SELECT count(ID) FROM SYS_USER where DEPTID = #{deptId}
+	</select>
+	
+	<insert id="save" parameterType="SysUser">
+		INSERT INTO SYS_USER (USERNAME, PASSWORD, REALNAME, EMAIL, ISDISABLE, SALT, CREATE_TIME, 
+			LAST_LOGIN_TIME, DEPTID) VALUES
+		(#{username}, #{password}, #{realname}, #{email}, 0, #{salt}, now(), now(), #{deptId})
+	</insert>
+	
+	<update id="updateUser" parameterType="SysUser">
+		UPDATE 
+			SYS_USER 
+		SET 
+			REALNAME = #{realname}, 
+			EMAIL = #{email}, 
+			ISDISABLE = #{isdisable}, 
+			DEPTID = #{deptId} 
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<update id="reloadPwd" parameterType="SysUser">
+		UPDATE 
+			SYS_USER 
+		SET 
+			PASSWORD = #{password} 
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<select id="getUserAllRole" resultType="Integer">
+		SELECT ROLE_ID FROM SYS_USER_ROLE where USER_ID = #{selectUser}
+	</select>
+	
+	<delete id="deleteUserRoles">
+		DELETE FROM SYS_USER_ROLE WHERE USER_ID = #{userId}
+	</delete>
+	
+	<insert id="saveUserRoles">
+		INSERT INTO SYS_USER_ROLE (USER_ID, ROLE_ID) VALUES
+		<foreach collection="idList" item="id" separator=",">
+			(#{userId}, #{id})
+		</foreach>
+	</insert>
+	
+	<select id="getUsersByRole" resultType="UserTree">
+		SELECT 
+			u.ID as id, 
+			u.REALNAME as text 
+		FROM 
+			SYS_USER u left join SYS_USER_ROLE ur on u.ID = ur.USER_ID 
+				left join SYS_ROLE r on ur.ROLE_ID = r.ROLE_ID 
+		where 
+			r.ROLE_CODE = #{roleCode};
+	</select>
+	
+	<select id="getUsernamesByRole" resultType="String">
+		SELECT 
+			u.USERNAME
+		FROM 
+			SYS_USER u left join SYS_USER_ROLE ur on u.ID = ur.USER_ID 
+				left join SYS_ROLE r on ur.ROLE_ID = r.ROLE_ID 
+		where 
+			r.ROLE_CODE = #{roles};
+	</select>
+	
+	<select id="getUserRoleCodes" resultType="String">
+		SELECT 
+			ROLE_CODE 
+		FROM 
+			SYS_ROLE r left join SYS_USER_ROLE ur on r.ROLE_ID = ur.ROLE_ID 
+		where 
+			ur.USER_ID = #{id}
+	</select>
+	
+	<select id="getAllUser" resultType="UserTree">
+		SELECT 
+			u.ID as id, 
+			u.REALNAME as text 
+		FROM 
+			SYS_USER u 
+	</select>
+</mapper>

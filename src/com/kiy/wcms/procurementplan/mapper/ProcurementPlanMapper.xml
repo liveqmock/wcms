@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.procurementplan.mapper.ProcurementPlanMapper">
+	<select id="getTotal" parameterType="ProcurementPlanParam" resultType="Integer">
+		SELECT 
+			count(p.ID)
+		FROM 
+			PROCUREMENTPLAN p 
+		
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="applyUser != null">
+				and p.APPLYUSER = #{applyUser} 
+			</if>
+			<if test="applyDateBegin != null">
+				and p.APPLYDATE >= #{applyDateBegin} 
+			</if>
+			<if test="applyDateEnd != null">
+				and p.APPLYDATE &lt;= #{applyDateEnd} 
+			</if>
+			and p.ID != -1
+		</where>
+	</select>
+	<select id="getProcurementPlanList" parameterType="ProcurementPlanParam" resultType="ProcurementPlan">
+		SELECT 
+			p.ID as id,
+			p.CODE as code,
+			p.APPLYUSER as applyUserName,
+			p.APPLYDATE as applyDate,
+			p.CREATEUSER as createUser,
+			p.CREATEDATE as createDate,
+			p.STATUS as status
+		FROM 
+			PROCUREMENTPLAN p
+		
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="applyUser != null">
+				and p.APPLYUSER = #{applyUser} 
+			</if>
+			<if test="applyDateBegin != null">
+				and p.APPLYDATE >= #{applyDateBegin} 
+			</if>
+			<if test="applyDateEnd != null">
+				and p.APPLYDATE &lt;= #{applyDateEnd} 
+			</if>
+			<if test="status != null">
+				and p.STATUS = #{status} 
+			</if>
+			and p.ID != -1
+		</where>
+		ORDER BY
+			p.APPLYDATE DESC
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	<select id="getNextCode" resultType="Integer">
+		SELECT max(right(CODE,4)) FROM PROCUREMENTPLAN WHERE ID != -1
+	</select>
+	<insert id="save" parameterType="ProcurementPlan" useGeneratedKeys="true">
+		<selectKey order="AFTER" keyProperty="id" keyColumn="id" resultType="Integer">
+			SELECT LAST_INSERT_ID() AS id
+		</selectKey>
+		INSERT INTO 
+			PROCUREMENTPLAN (CODE, APPLYUSER, APPLYDATE, CREATEUSER, CREATEDATE, STATUS) 
+		VALUES
+			(#{code}, #{applyUserName}, #{applyDate}, #{createUser.id}, now(), 0)	
+	</insert>
+	<update id="updateProcurementPlan" parameterType="ProcurementPlan">
+		UPDATE 
+			PROCUREMENTPLAN 
+		SET 
+			APPLYUSER = #{applyUserName}, 
+			APPLYDATE = #{applyDate} 
+		WHERE 
+			ID = #{id}
+	</update>
+	<delete id="deleteProcurementPlan">
+		DELETE FROM PROCUREMENTPLAN WHERE ID = #{id}
+	</delete>
+	<update id="submitAudit">
+		UPDATE PROCUREMENTPLAN SET STATUS = #{status} WHERE ID = #{id}
+	</update>
+	<update id="submitPlan">
+		UPDATE PROCUREMENTPLAN SET STATUS = 10 WHERE ID = #{id}
+	</update>
+	
+	<select id="getAuditPlanList" parameterType="ProcurementPlanParam" resultType="ProcurementPlan">
+		SELECT 
+			p.ID as id,
+			p.CODE as code,
+			p.APPLYUSER as applyUserName,
+			p.APPLYDATE as applyDate,
+			p.CREATEUSER as createUser,
+			p.CREATEDATE as createDate,
+			p.STATUS as status
+		FROM 
+			PROCUREMENTPLAN p
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="applyUser != null">
+				and p.APPLYUSER = #{applyUser} 
+			</if>
+			<if test="applyDateBegin != null">
+				and p.APPLYDATE >= #{applyDateBegin} 
+			</if>
+			<if test="applyDateEnd != null">
+				and p.APPLYDATE &lt;= #{applyDateEnd} 
+			</if>
+			<choose>
+				<when test="auditStatus==0">
+					and p.STATUS = #{seeStatus}
+				</when>
+				<otherwise>
+					and p.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+			and p.ID != -1
+		</where>
+		ORDER BY
+			p.APPLYDATE DESC
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getAuditTotal" parameterType="ProcurementPlanParam" resultType="Integer">
+		SELECT 
+			count(1)
+		FROM 
+			PROCUREMENTPLAN p left join SYS_USER u on p.APPLYUSER = u.ID
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="applyUser != null">
+				and p.APPLYUSER = #{applyUser} 
+			</if>
+			<if test="applyDateBegin != null">
+				and p.APPLYDATE >= #{applyDateBegin} 
+			</if>
+			<if test="applyDateEnd != null">
+				and p.APPLYDATE &lt;= #{applyDateEnd} 
+			</if>
+			<choose>
+				<when test="auditStatus==0">
+					and p.STATUS = #{seeStatus}
+				</when>
+				<otherwise>
+					and p.STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+			and p.ID != -1
+		</where>
+	</select>
+	
+	<select id="getBackTotal" resultType="Integer">
+		SELECT count(1) FROM procurementplan where STATUS = -5555 and ID != -1
+	</select>
+</mapper>

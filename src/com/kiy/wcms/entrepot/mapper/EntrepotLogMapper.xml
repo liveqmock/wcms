@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.entrepot.mapper.EntrepotLogMapper">
+	<select id="getNextInEntrepotCode" resultType="Integer">
+		SELECT max(right(CODE,4)) FROM ENTREPOT_LOG WHERE ITYPE = 0
+	</select>
+	
+	<insert id="inEntrepot" parameterType="EntrepotLog">
+		INSERT INTO ENTREPOT_LOG (CODE, AMOUNT, UNITPRICE, REMARK, ITYPE, ENTREPOT, SHELFNO, 
+			RECEIVEUSER, CREATEUSER, GOODS_ID, CREATETIME) 
+		VALUES
+			(#{code}, #{amount}, #{unitPrice}, #{remark}, #{type}, #{entrepotId}, #{shelfId},
+				#{receiveUserName}, #{createUser}, #{goodsId}, #{createTime})
+	</insert>
+	
+	<select id="getInEntrepotList" parameterType="EntrepotParam" resultType="EntrepotLog">
+		SELECT 
+			e.CODE as code,
+			g.NAME as goodsName,
+			g.MODEL as goodsModel,
+			g.BRAND as goodsBrand,
+			n.UNIT_NAME as goodsUnitName,
+			e.AMOUNT as amount,
+			e.UNITPRICE as unitPrice,
+			e.RECEIVEUSER as receiveUserName,
+			from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') as createTimeStr,
+			e.REMARK as remark 
+		FROM 
+			ENTREPOT_LOG e left join GOODS_STORE g on e.GOODS_ID = g.ID 
+			left join SYS_UNIT n on g.UNIT = n.UNIT_ID
+		WHERE
+			e.ITYPE = 0
+			<if test="code != null">
+				and e.CODE like CONCAT('%',#{code},'%')
+			</if>
+			
+			<if test="name != null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			
+			<if test="model != null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			
+			<if test="brand != null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+			
+			<if test="createDateStrBegin != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') >= #{createDateStrBegin}
+			</if>
+			
+			<if test="createDateStrEnd != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') &lt;= #{createDateStrBegin}
+			</if>
+			
+			<if test="receiveUserName != null">
+				and e.RECEIVEUSER = #{receiveUserName}
+			</if>
+		ORDER BY
+			e.CREATETIME desc
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getInEntrepotTotal" parameterType="EntrepotParam" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM 
+			ENTREPOT_LOG e left join GOODS_STORE g on e.GOODS_ID = g.ID 
+			left join SYS_UNIT n on g.UNIT = n.UNIT_ID left join SYS_USER u on e.RECEIVEUSER = u.ID
+		WHERE
+			e.ITYPE = 0
+			<if test="code != null">
+				and e.CODE like CONCAT('%',#{code},'%')
+			</if>
+			
+			<if test="name != null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			
+			<if test="model != null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			
+			<if test="brand != null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+			
+			<if test="createDateStrBegin != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') >= #{createDateStrBegin}
+			</if>
+			
+			<if test="createDateStrEnd != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') &lt;= #{createDateStrBegin}
+			</if>
+			
+			<if test="receiveUser != null">
+				and e.RECEIVEUSER = #{receiveUser}
+			</if>
+	</select>
+	
+	<insert id="outEntrepot" parameterType="EntrepotLog">
+		INSERT INTO ENTREPOT_LOG (CODE, AMOUNT, UNITPRICE, REMARK, ITYPE, ENTREPOT, SHELFNO, 
+			RECEIVEUSER, CREATEUSER, GOODS_ID, CREATETIME) 
+		VALUES
+			(#{code}, #{amount}, #{unitPrice}, #{remark}, #{type}, #{entrepotId}, #{shelfId},
+				#{receiveUserName}, #{createUser}, #{goodsId}, #{createTime})
+	</insert>
+	
+	<select id="getNextOutEntrepotCode" resultType="Integer">
+		SELECT max(right(CODE,4)) FROM ENTREPOT_LOG WHERE ITYPE = 1
+	</select>
+	
+	<select id="getOutEntrepotList" resultType="EntrepotLog" parameterType="EntrepotParam">
+		SELECT 
+			e.CODE as code,
+			g.NAME as goodsName,
+			g.MODEL as goodsModel,
+			g.BRAND as goodsBrand,
+			n.UNIT_NAME as goodsUnitName,
+			e.AMOUNT as amount,
+			e.UNITPRICE as unitPrice,
+			e.RECEIVEUSER as receiveUserName,
+			from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') as createTimeStr,
+			e.REMARK as remark 
+		FROM 
+			ENTREPOT_LOG e left join GOODS_STORE g on e.GOODS_ID = g.ID 
+			left join SYS_UNIT n on g.UNIT = n.UNIT_ID
+		WHERE
+			e.ITYPE = 1
+			<if test="code != null">
+				and e.CODE like CONCAT('%',#{code},'%')
+			</if>
+			
+			<if test="name != null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			
+			<if test="model != null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			
+			<if test="brand != null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+			
+			<if test="createDateStrBegin != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') >= #{createDateStrBegin}
+			</if>
+			
+			<if test="createDateStrEnd != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') &lt;= #{createDateStrBegin}
+			</if>
+			
+			<if test="receiveUserName != null">
+				and e.RECEIVEUSER = #{receiveUserName}
+			</if>
+		ORDER BY
+			e.CREATETIME desc
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getOutEntrepotTotal" parameterType="EntrepotParam" resultType="Integer">
+		SELECT 
+			count(1) 
+		FROM 
+			ENTREPOT_LOG e left join GOODS_STORE g on e.GOODS_ID = g.ID 
+			left join SYS_UNIT n on g.UNIT = n.UNIT_ID left join SYS_USER u on e.RECEIVEUSER = u.ID
+		WHERE
+			e.ITYPE = 1
+			<if test="code != null">
+				and e.CODE like CONCAT('%',#{code},'%')
+			</if>
+			
+			<if test="name != null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			
+			<if test="model != null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			
+			<if test="brand != null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+			
+			<if test="createDateStrBegin != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') >= #{createDateStrBegin}
+			</if>
+			
+			<if test="createDateStrEnd != null">
+				and from_unixtime(left(e.CREATETIME,10),'%Y-%m-%d %H:%i') &lt;= #{createDateStrBegin}
+			</if>
+			
+			<if test="receiveUser != null">
+				and e.RECEIVEUSER = #{receiveUser}
+			</if>
+	</select>
+</mapper>

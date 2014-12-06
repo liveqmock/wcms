@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.sys.mapper.AuditMapper">
+	<select id="getAuditList" resultType="Audit">
+		SELECT 
+			a.ID as id,
+			a.APPROVAL_USER as userId,
+			u.REALNAME as userName,
+			d.D_NAME as userDept,
+			a.APPROVAL_DATE as auditDate,
+			a.S_OPTION as ioption,
+			a.S_COMMENT as comment 
+		FROM 
+			APPROVAL_LOG a left join SYS_USER u on a.APPROVAL_USER = u.ID 
+				left join SYS_DEPARTMENT d on u.DEPTID = d.D_ID 
+		where 
+			a.I_KEY = #{id} 
+			and 
+			a.TYPE = #{type}
+		order by 
+			a.APPROVAL_DATE asc
+	</select>
+	
+	<insert id="save" parameterType="Audit">
+		INSERT INTO 
+			APPROVAL_LOG (APPROVAL_USER, APPROVAL_DATE, S_OPTION, TYPE, I_KEY, S_COMMENT) 
+		VALUES
+			(#{userId}, now(), #{ioption}, #{type}, #{key}, #{comment})
+	</insert>
+</mapper>

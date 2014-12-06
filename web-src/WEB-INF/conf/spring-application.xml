@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+    http://www.springframework.org/schema/context   
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd  
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+    http://www.springframework.org/schema/task 
+    http://www.springframework.org/schema/task/spring-task-3.0.xsd     
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+     
+	
+	<task:annotation-driven />
+	
+	<!-- 使用Spring组件扫描的方式来实现自动注入bean -->
+	<context:component-scan base-package="com.kiy.wcms.*" />
+	<!-- 隐式地向 Spring 容器注册 -->
+	<context:annotation-config />
+	
+	<bean id="exceptionHandler" class="com.kiy.wcms.exception.KiyExceptionHandler"/>
+	
+	<!-- 读取资源文件 -->
+	<!--
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="/WEB-INF/conf/jdbc.properties" />
+	</bean>
+	-->
+	<!--
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+		<property name="username" value="wcms"/>
+		<property name="password" value="datong123!@#"/>
+		<property name="url" value="jdbc:mysql://121.40.138.121:3306/wcms"/>
+	</bean>
+	-->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<!--
+		<property name="user">
+			<value>wcms</value>
+		</property>
+		<property name="password">
+			<value>datong123!@#</value>
+		</property>
+		<property name="jdbcUrl">
+			<value>jdbc:mysql://121.40.138.121:3306/wcms</value>
+		</property>
+		 -->
+		 <!--
+		<property name="user">
+			<value>wcms</value>
+		</property>
+		<property name="password">
+			<value>datong123!@#</value>
+		</property>
+		<property name="jdbcUrl">
+			<value>jdbc:mysql://localhost:3306/wcms</value>
+		</property> 
+		 -->
+		 
+		 <property name="user">
+		 	<value>root</value>
+		 </property>
+		 <property name="password">
+		 	<value>123</value>
+		 </property>
+		<property name="jdbcUrl">
+			<value>jdbc:mysql://localhost:3306/wcms</value>
+		</property>
+		 <!--创建连接池时，初始化连接数量-->
+		<property name="initialPoolSize">
+			<value>25</value>
+		</property>
+		<!--连接池中最小连接数--> 
+		<property name="minPoolSize">
+			<value>5</value>
+		</property>
+		 <!--连接池中最大连接数--> 
+		<property name="maxPoolSize">
+			<value>25</value>
+		</property>
+		<!--连接耗尽时，一次性增加连接个数--> 
+		<property name="acquireIncrement">
+			<value>5</value>
+		</property>
+		 <!--最大空闲时间(秒)-->
+		<property name="maxIdleTime">
+			<value>30</value>
+		</property>
+	</bean>
+    
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    	<property name="dataSource" ref="dataSource"/>
+   	</bean>
+    
+    <!-- 标注类型 的事务配置 -->
+	<tx:annotation-driven  transaction-manager="txManager"/>
+	
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="/WEB-INF/conf/mybatis-config.xml" />
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+    
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+  		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+    
+    <!-- 加载mybatis映射文件 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    	<property name="sqlSessionFactory" ref="sqlSessionFactory" /> 
+    	<property name="basePackage" 
+    		value="
+    			com.kiy.wcms.sys.mapper;
+    			com.kiy.wcms.order.mapper;
+    			com.kiy.wcms.producplan.mapper;
+    			com.kiy.wcms.design.mapper;
+    			com.kiy.wcms.gather.mapper;
+    			com.kiy.wcms.entrepot.mapper;
+    			com.kiy.wcms.procurementplan.mapper;
+    			" /> 
+    </bean>
+</beans>

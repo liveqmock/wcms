@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.procurementplan.mapper.AcceptMapper">
+	<select id="getAcceptItemList" parameterType="AcceptParam" resultType="AcceptItem">
+		SELECT 
+	        c.ID as contractId,
+	        cd.ID as contractDetailId,
+	        cd.UNITPRICE as price,
+	        g.ID as goodsId,
+	        p.CODE as applyNo,
+	        g.NAME as goodsName,
+	        g.MODEL as model,
+	        g.BRAND as brand,
+	        c.SUPPLIER as supply,
+	        u.UNIT_NAME as unitName,
+	        from_unixtime(left(c.RECEIVETIME,10),'%Y-%m-%d') as arriveDate,
+	        IFNULL(cd.AMOUNT,0) as amount,
+	        IFNULL(sum(a.AMOUNT),0) as receive,
+	        IFNULL(cd.AMOUNT,0) - IFNULL(sum(a.AMOUNT),0) as unReceive 
+		FROM 
+	        PROCUREMENT_CONTRACT c 
+	        LEFT JOIN CONTRACT_DETAIL cd on c.ID = cd.CONTRACT_ID 
+	        LEFT JOIN PROCUREMENT_DETAIL pd on cd.PLAN_ID = pd.ID 
+	        LEFT JOIN PROCUREMENTPLAN p on pd.PLANID = p.ID 
+	        LEFT JOIN GOODS_STORE g on pd.GOODSID = g.ID
+	        LEFT JOIN SYS_UNIT u on g.UNIT = u.UNIT_ID
+	        LEFT JOIN ACCEPTANCE a on cd.ID = a.CONTRACT_ID
+		WHERE 
+			c.STATUS = 30
+			and
+			cd.ID is not null
+			<if test="goodsName != null">
+				and g.NAME like CONCAT('%',#{goodsName},'%')
+			</if>
+			<if test="goodsModel != null">
+				and g.MODEL like CONCAT('%',#{goodsModel},'%')
+			</if>
+			<if test="goodsBrand != null">
+				and g.BRAND like CONCAT('%',#{goodsBrand},'%')
+			</if>
+			<if test="applyNo != null">
+				and p.CODE like CONCAT('%',#{applyNo},'%')
+			</if>
+			<if test="supply != null">
+				and c.SUPPLIER like CONCAT('%',#{supply},'%')
+			</if>
+			<if test="arriveDateBegin != null">
+				and c.RECEIVETIME >= #{arriveDateBegin}
+			</if>
+			<if test="arriveDateEnd != null">
+				and c.RECEIVETIME &lt;= #{arriveDateEnd}
+			</if>
+		GROUP BY 
+        	c.ID,cd.ID,g.ID,p.CODE,g.NAME,g.MODEL,g.BRAND,c.SUPPLIER,u.UNIT_NAME,c.RECEIVETIME, cd.AMOUNT
+        <choose>
+        	<when test="status == 1">
+        		having IFNULL(sum(a.AMOUNT),0) = 0
+        	</when>
+        	<when test="status == 2">
+        		having IFNULL(cd.AMOUNT,0) - IFNULL(sum(a.AMOUNT),0) != 0
+        	</when>
+        	<when test="status == 3">
+        		having IFNULL(cd.AMOUNT,0) - IFNULL(sum(a.AMOUNT),0) = 0
+        	</when>
+        </choose>
+	</select>
+	
+	<select id="getAcceptTotal" parameterType="AcceptParam" resultType="Integer">
+		select count(1) from(
+			SELECT 
+	        c.ID as contractId
+		FROM 
+	        PROCUREMENT_CONTRACT c 
+	        LEFT JOIN CONTRACT_DETAIL cd on c.ID = cd.CONTRACT_ID 
+	        LEFT JOIN PROCUREMENT_DETAIL pd on cd.PLAN_ID = pd.ID 
+	        LEFT JOIN PROCUREMENTPLAN p on pd.PLANID = p.ID 
+	        LEFT JOIN GOODS_STORE g on pd.GOODSID = g.ID
+	        LEFT JOIN SYS_UNIT u on g.UNIT = u.UNIT_ID
+	        LEFT JOIN ACCEPTANCE a on cd.ID = a.CONTRACT_ID
+		WHERE 
+			c.STATUS = 30
+			and
+			cd.ID is not null
+			<if test="goodsName != null">
+				and g.NAME like CONCAT('%',#{goodsName},'%')
+			</if>
+			<if test="goodsModel != null">
+				and g.MODEL like CONCAT('%',#{goodsModel},'%')
+			</if>
+			<if test="goodsBrand != null">
+				and g.BRAND like CONCAT('%',#{goodsBrand},'%')
+			</if>
+			<if test="applyNo != null">
+				and p.CODE like CONCAT('%',#{applyNo},'%')
+			</if>
+			<if test="supply != null">
+				and c.SUPPLIER like CONCAT('%',#{supply},'%')
+			</if>
+			<if test="arriveDateBegin != null">
+				and c.RECEIVETIME >= #{arriveDateBegin}
+			</if>
+			<if test="arriveDateEnd != null">
+				and c.RECEIVETIME &lt;= #{arriveDateEnd}
+			</if>
+		GROUP BY 
+        	c.ID,cd.ID,g.ID,p.CODE,g.NAME,g.MODEL,g.BRAND,c.SUPPLIER,u.UNIT_NAME,c.RECEIVETIME, cd.AMOUNT
+        <choose>
+        	<when test="status == 1">
+        		having IFNULL(sum(a.AMOUNT),0) = 0
+        	</when>
+        	<when test="status == 2">
+        		having IFNULL(cd.AMOUNT,0) - IFNULL(sum(a.AMOUNT),0) != 0
+        	</when>
+        	<when test="status == 3">
+        		having IFNULL(cd.AMOUNT,0) - IFNULL(sum(a.AMOUNT),0) = 0
+        	</when>
+        </choose>
+		) a
+	</select>
+	
+	<insert id="addAccept" parameterType="Accept">
+		INSERT INTO acceptance (CONTRACT_ID, AMOUNT, CHECKUSER, CHECKDATE, CREATEUSER, CREATEDATE, 
+			ENTREPOT, SHELFNO, remark, GOODSID) 
+		VALUES
+			(#{contractDetailId}, #{amount}, #{checkUser}, #{checkDate}, #{createUser}, #{createDate},
+			#{entrepot}, #{shelf}, #{remark}, #{goodsId})
+	</insert>
+</mapper>

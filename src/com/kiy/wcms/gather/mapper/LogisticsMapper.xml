@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.gather.mapper.LogisticsMapper">
+	<insert id="save" parameterType="Logistics">
+		INSERT INTO LOGISTICS (DELIVERYID, CREATEDATE, PLACE, STATUS, CREATEUSER, REMARK) VALUES
+		(#{deliveryId}, #{createTime}, #{place}, 0, #{createUser}, #{remark})
+	</insert>
+	
+	<select id="getLogisticsList" resultType="Logistics">
+		SELECT 
+			from_unixtime(left(l.CREATEDATE,10),'%Y-%m-%d %H:%i') as createTimeStr, 
+			l.PLACE as place, 
+			u.REALNAME as createUserName, 
+			l.REMARK as remark
+		FROM 
+			LOGISTICS l left join SYS_USER u on l.CREATEUSER = u.ID 
+		WHERE 
+			l.DELIVERYID = #{deliveryId}
+	</select>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.design.mapper.DesignAttaMapper">
+	<insert id="save">
+		INSERT INTO DESIGN_ATTA (DESIGN_ID, FILEPATH, FILE_NAME) VALUES
+			(#{designId}, #{path}, #{name})
+	</insert>
+	
+	<select id="getAttaList" resultType="DesignAtta">
+		SELECT 
+			ID as id,
+			FILE_NAME as fileName
+		FROM 
+			DESIGN_ATTA 
+		WHERE 
+			DESIGN_ID = #{designId}
+	</select>
+	
+	<select id="getAttaPath" resultType="String">
+		SELECT FILEPATH FROM DESIGN_ATTA WHERE ID = #{attaId}
+	</select>
+	
+	<delete id="delete">
+		DELETE FROM DESIGN_ATTA WHERE ID = #{attaId}
+	</delete>
+</mapper>

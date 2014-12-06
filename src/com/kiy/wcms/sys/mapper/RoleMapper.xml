@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.sys.mapper.RoleMapper">
+	<select id="getRoleList" resultType="Role">
+		SELECT 
+			ROLE_ID as id,
+			ROLE_CODE as code,
+			ROLE_NAME as name,
+			ROLE_DESC as sdesc 
+		FROM 
+			SYS_ROLE 
+		limit #{begin},#{rows}
+	</select>
+	
+	<insert id="save" parameterType="Role">
+		INSERT INTO SYS_ROLE ( ROLE_CODE, ROLE_NAME, ROLE_DESC) VALUES
+			(#{code}, #{name}, #{sdesc})
+	</insert>
+	
+	<update id="update" parameterType="Role">
+		UPDATE 
+			SYS_ROLE 
+		SET 
+			ROLE_CODE = #{code}, 
+			ROLE_NAME = #{name}, 
+			ROLE_DESC = #{sdesc} 
+		WHERE 
+			ROLE_ID = #{id}
+	</update>
+	
+	<delete id="deleteRoleMenu">
+		DELETE FROM SYS_ROLE_MENU WHERE ROLE_ID = #{id}
+	</delete>
+	
+	<delete id="deleteUserRole">
+		DELETE FROM SYS_USER_ROLE WHERE ROLE_ID = #{id}
+	</delete>
+	
+	<delete id="deleteRole">
+		DELETE FROM SYS_ROLE WHERE ROLE_ID = #{id}
+	</delete>
+	
+	<resultMap type="MenuTree" id="menuTreeMap">
+		<id property="id" column="id"/>
+		<result property="text" column="text"/>
+		<collection property="children" ofType="MenuTree" column="id" select="getChildMenus"></collection>
+	</resultMap>
+	
+	<select id="getAllMenu" resultMap="menuTreeMap">
+		SELECT 
+			MENU_ID as id, 
+			MENU_NAME as text 
+		FROM 
+			SYS_MENU 
+		where 
+			MENU_PARENTID = 0
+		order by
+			ORDERNO asc
+	</select>
+	
+	<select id="getChildMenus" resultMap="menuTreeMap">
+		SELECT 
+			MENU_ID as id, 
+			MENU_NAME as text 
+		FROM 
+			SYS_MENU 
+		where 
+			MENU_PARENTID = #{id}
+		order by
+			ORDERNO asc
+	</select>
+	
+	<select id="getHadMenus" resultType="Integer">
+		SELECT MENU_ID FROM SYS_ROLE_MENU where ROLE_ID = #{roleId}
+	</select>
+	
+	<insert id="saveRoleMenu">
+		INSERT INTO SYS_ROLE_MENU (ROLE_ID, MENU_ID) VALUES
+		<foreach collection="idList" item="id" separator=",">
+			(#{roleId}, #{id})
+		</foreach>
+	</insert>
+	
+	<select id="getTotal" resultType="Integer">
+		SELECT count(ROLE_ID) FROM SYS_ROLE
+	</select>
+	
+	<select id="getAllRole" resultType="Role">
+		SELECT 
+			ROLE_ID as id,
+			ROLE_CODE as code,
+			ROLE_NAME as name,
+			ROLE_DESC as sdesc 
+		FROM 
+			SYS_ROLE
+	</select>
+</mapper>
+	

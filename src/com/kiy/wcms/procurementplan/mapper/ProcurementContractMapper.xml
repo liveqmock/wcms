@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.procurementplan.mapper.ProcurementContractMapper">
+	<select id="getTotal" parameterType="ProcurementContractParam" resultType="Integer">
+		SELECT 
+			count(p.ID)
+		FROM 
+			PROCUREMENT_CONTRACT p 
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="name != null">
+				and p.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="supplier != null">
+				and p.SUPPLIER like CONCAT('%',#{supplier},'%')
+			</if>
+			<if test="supplierLinkman != null">
+				and p.SUPPLIER_LINKMAN like CONCAT('%',#{supplierLinkman},'%')
+			</if>
+			<if test="supplierPhone != null">
+				and p.SUPPLIER_PHONE like CONCAT('%',#{supplierPhone},'%')
+			</if>
+			<if test="signUser != null">
+				and p.SIGNUSER = #{signUser} 
+			</if>
+			<if test="receiveUser != null">
+				and p.RECEIVEUSER = #{receiveUser} 
+			</if>
+			<if test="sumBegin != null">
+				and p.SUM >= #{sumBegin} 
+			</if>
+			<if test="sumEnd != null">
+				and p.SUM &lt;= #{sumEnd} 
+			</if>
+			<if test="status != null">
+				and p.STATUS = #{status}
+			</if>
+			<if test="receiveTimeBegin != null">
+				and p.RECEIVETIME >= #{receiveTimeBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.RECEIVETIME &lt;= #{receiveTimeEnd} 
+			</if>
+			<if test="signDateBegin != null">
+				and p.signDate >= #{signDateBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.signDate &lt;= #{signDateEnd} 
+			</if>
+		</where>
+	</select>
+	<select id="getProcurementContractList" parameterType="ProcurementContractParam" resultType="ProcurementContract">
+		SELECT 
+			p.ID as id,
+			p.SUPPLIER as supplier,
+			p.SUPPLIER_LINKMAN as supplierLinkman,
+			p.SUPPLIER_PHONE as supplierPhone,
+			p.SIGNUSER as signUser,
+			u.REALNAME as signUserName,
+			p.SUM as sum,
+			p.CREATE_USER as createUser,
+			from_unixtime(left(p.CREATE_DATE,10),'%Y-%m-%d') as createDateStr,
+			p.STATUS as status,
+			p.REMARK as remark,
+			p.RECEIVEUSER as receiveUserName, 
+			from_unixtime(left(p.RECEIVETIME,10),'%Y-%m-%d') as receiveTimeStr,
+			p.CODE as code,
+			p.NAME as name,
+			p.COMPANY as company,
+			from_unixtime(left(p.SIGNDATE,10),'%Y-%m-%d') as signDateStr
+		FROM 
+			PROCUREMENT_CONTRACT p 
+			left join SYS_USER u on p.SIGNUSER = u.ID
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="name != null">
+				and p.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="supplier != null">
+				and p.SUPPLIER like CONCAT('%',#{supplier},'%')
+			</if>
+			<if test="supplierLinkman != null">
+				and p.SUPPLIER_LINKMAN like CONCAT('%',#{supplierLinkman},'%')
+			</if>
+			<if test="supplierPhone != null">
+				and p.SUPPLIER_PHONE like CONCAT('%',#{supplierPhone},'%')
+			</if>
+			<if test="signUser != null">
+				and p.SIGNUSER = #{signUser} 
+			</if>
+			<if test="receiveUser != null">
+				and p.RECEIVEUSER = #{receiveUserName} 
+			</if>
+			<if test="sumBegin != null">
+				and p.SUM >= #{sumBegin} 
+			</if>
+			<if test="sumEnd != null">
+				and p.SUM &lt;= #{sumEnd} 
+			</if>
+			<if test="status != null">
+				and p.STATUS = #{status}
+			</if>
+			<if test="receiveTimeBegin != null">
+				and p.RECEIVETIME >= #{receiveTimeBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.RECEIVETIME &lt;= #{receiveTimeEnd} 
+			</if>
+			<if test="signDateBegin != null">
+				and p.signDate >= #{signDateBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.signDate &lt;= #{signDateEnd} 
+			</if>
+		</where>
+		ORDER BY
+			p.SIGNDATE desc
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	<select id="getNextCode" resultType="Integer">
+		SELECT 
+			max(right(CODE,4)) 
+		FROM 
+			PROCUREMENT_CONTRACT
+		WHERE
+			CODE like CONCAT(#{prefix},'%')
+	</select>
+	<insert id="save" parameterType="ProcurementContract" useGeneratedKeys="true">
+		<selectKey order="AFTER" keyProperty="id" keyColumn="id" resultType="Integer">
+			SELECT LAST_INSERT_ID() AS id
+		</selectKey>
+		INSERT INTO 
+			PROCUREMENT_CONTRACT (SUPPLIER, SUPPLIER_LINKMAN, SUPPLIER_PHONE,
+			 SIGNUSER, SUM, CREATE_USER, CREATE_DATE, STATUS, REMARK, RECEIVEUSER, 
+			 RECEIVETIME, CODE, NAME, SIGNDATE, COMPANY) 
+		VALUES
+			(#{supplier}, #{supplierLinkman}, #{supplierPhone}, #{signUser}, #{sum},
+			 #{createUser.id}, #{createDate}, 0, #{remark}, #{receiveUserName},#{receiveTime},
+			  #{code}, #{name}, #{signDate}, #{company})	
+	</insert>
+	<update id="update" parameterType="ProcurementContract">
+		UPDATE 
+			PROCUREMENT_CONTRACT 
+		SET 
+			SUPPLIER = #{supplier},
+			SUPPLIER_LINKMAN = #{supplierLinkman},
+			SUPPLIER_PHONE = #{supplierPhone},
+			SIGNUSER = #{signUser},
+			SUM = #{sum},
+			REMARK = #{remark},
+			RECEIVEUSER = #{receiveUserName},
+			RECEIVETIME = #{receiveTime},
+			NAME = #{name},
+			SIGNDATE = #{signDate}
+		WHERE 
+			ID = #{id}
+	</update>
+	<delete id="deleteContract">
+		DELETE FROM PROCUREMENT_CONTRACT WHERE ID = #{id}
+	</delete>
+	<update id="submitAudit">
+		UPDATE PROCUREMENT_CONTRACT SET STATUS = #{status} WHERE ID = #{id}
+	</update>
+	
+	<update id="submitContract">
+		UPDATE PROCUREMENT_CONTRACT SET STATUS = 10 WHERE ID = #{id}
+	</update>
+	
+	<select id="getAuditList" parameterType="ProcurementContractParam" resultType="ProcurementContract">
+		SELECT 
+			p.ID as id,
+			p.SUPPLIER as supplier,
+			p.SUPPLIER_LINKMAN as supplierLinkman,
+			p.SUPPLIER_PHONE as supplierPhone,
+			p.SIGNUSER as signUser,
+			u.REALNAME as signUserName,
+			p.SUM as sum,
+			p.CREATE_USER as createUser,
+			from_unixtime(left(p.CREATE_DATE,10),'%Y-%m-%d') as createDateStr,
+			p.STATUS as status,
+			p.REMARK as remark,
+			p.RECEIVEUSER as receiveUser,
+			u1.REALNAME as receiveUserName, 
+			from_unixtime(left(p.RECEIVETIME,10),'%Y-%m-%d') as receiveTimeStr,
+			p.CODE as code,
+			p.NAME as name,
+			p.COMPANY as company,
+			from_unixtime(left(p.SIGNDATE,10),'%Y-%m-%d') as signDateStr
+		FROM 
+			PROCUREMENT_CONTRACT p 
+			left join SYS_USER u on p.SIGNUSER = u.ID
+			left join SYS_USER u1 on p.RECEIVEUSER = u1.ID
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="name != null">
+				and p.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="supplier != null">
+				and p.SUPPLIER like CONCAT('%',#{supplier},'%')
+			</if>
+			<if test="supplierLinkman != null">
+				and p.SUPPLIER_LINKMAN like CONCAT('%',#{supplierLinkman},'%')
+			</if>
+			<if test="supplierPhone != null">
+				and p.SUPPLIER_PHONE like CONCAT('%',#{supplierPhone},'%')
+			</if>
+			<if test="signUser != null">
+				and p.SIGNUSER = #{signUser} 
+			</if>
+			<if test="receiveUser != null">
+				and p.RECEIVEUSER = #{receiveUser} 
+			</if>
+			<if test="sumBegin != null">
+				and p.SUM >= #{sumBegin} 
+			</if>
+			<if test="sumEnd != null">
+				and p.SUM &lt;= #{sumEnd} 
+			</if>
+			<if test="receiveTimeBegin != null">
+				and p.RECEIVETIME >= #{receiveTimeBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.RECEIVETIME &lt;= #{receiveTimeEnd} 
+			</if>
+			<if test="signDateBegin != null">
+				and p.signDate >= #{signDateBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.signDate &lt;= #{signDateEnd} 
+			</if>
+			<choose>
+				<when test="auditStatus == 0">
+					p.status = #{seeStatus}
+				</when>
+				<otherwise>
+					p.status > #{seeStatus}
+				</otherwise>
+			</choose>
+		</where>
+		ORDER BY
+			p.SIGNDATE desc
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getAuditTotal" parameterType="ProcurementContractParam" resultType="Integer">
+		SELECT 
+			count(1)
+		FROM 
+			PROCUREMENT_CONTRACT p 
+			left join SYS_USER u on p.SIGNUSER = u.ID
+			left join SYS_USER u1 on p.RECEIVEUSER = u1.ID
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="name != null">
+				and p.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="supplier != null">
+				and p.SUPPLIER like CONCAT('%',#{supplier},'%')
+			</if>
+			<if test="supplierLinkman != null">
+				and p.SUPPLIER_LINKMAN like CONCAT('%',#{supplierLinkman},'%')
+			</if>
+			<if test="supplierPhone != null">
+				and p.SUPPLIER_PHONE like CONCAT('%',#{supplierPhone},'%')
+			</if>
+			<if test="signUser != null">
+				and p.SIGNUSER = #{signUser} 
+			</if>
+			<if test="receiveUser != null">
+				and p.RECEIVEUSER = #{receiveUser} 
+			</if>
+			<if test="sumBegin != null">
+				and p.SUM >= #{sumBegin} 
+			</if>
+			<if test="sumEnd != null">
+				and p.SUM &lt;= #{sumEnd} 
+			</if>
+			<if test="receiveTimeBegin != null">
+				and p.RECEIVETIME >= #{receiveTimeBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.RECEIVETIME &lt;= #{receiveTimeEnd} 
+			</if>
+			<if test="signDateBegin != null">
+				and p.signDate >= #{signDateBegin} 
+			</if>
+			<if test="receiveTimeEnd != null">
+				and p.signDate &lt;= #{signDateEnd} 
+			</if>
+			<choose>
+				<when test="auditStatus == 0">
+					p.status = #{seeStatus}
+				</when>
+				<otherwise>
+					p.status > #{seeStatus}
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<select id="getBackTotal" resultType="Integer">
+		SELECT count(1) FROM procurement_contract where STATUS = -5555
+	</select>
+</mapper>

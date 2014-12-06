@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTDConfig 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<package name="com.kiy.wcms.sys.entity"/>
+		<package name="com.kiy.wcms.order.entity"/>
+		<package name="com.kiy.wcms.producplan.entity"/>
+		<package name="com.kiy.wcms.design.entity"/>
+		<package name="com.kiy.wcms.gather.entity"/>
+		<package name="com.kiy.wcms.entrepot.entity"/>
+		<package name="com.kiy.wcms.procurementplan.entity"/>
+	</typeAliases>
+</configuration>

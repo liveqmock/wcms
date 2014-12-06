@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.sys.mapper.MenuMapper">
+	<resultMap type="Menu" id="menuMap">
+		<id property="id" column="id"/>
+		<result property="name" column="name"/>
+		<result property="uri" column="uri"/>
+		<result property="level" column="level"/>
+		<collection property="childs" select="getChildMenu" column="{id=id, userId=userId}"  ofType="Menu"></collection>
+	</resultMap>
+	
+	<resultMap type="Menu" id="childMenuMap">
+		<id property="id" column="C_MENU_ID"/>
+		<result property="name" column="C_MENU_NAME"/>
+		<result property="uri" column="C_MENU_URI"/>
+		<result property="level" column="C_MENU_LEVEL"/>
+	</resultMap>
+	
+	<sql id="menuColumn">
+		m1.MENU_ID as id,
+		m1.MENU_NAME as name,
+		m1.MENU_URI as uri,
+		m1.MENU_LEVEL as level,
+		ur.USER_ID as userId
+	</sql>
+	
+	<select id="findAllMenus" resultMap="menuMap">
+		SELECT 
+			distinct
+			<include refid="menuColumn"/>
+        	FROM SYS_MENU m1 
+        	left join SYS_ROLE_MENU rm on m1.MENU_ID = rm.MENU_ID 
+        	left join SYS_USER_ROLE ur on rm.ROLE_ID = ur.ROLE_ID
+        	where m1.MENU_LEVEL = 0  
+        	and ur.USER_ID = #{id}
+        	order by m1.orderno asc
+	</select>
+	
+	<select id="getChildMenu" resultMap="menuMap">
+		SELECT 
+			<include refid="menuColumn"/>
+        	FROM SYS_MENU m1 
+        	left join SYS_ROLE_MENU rm on m1.MENU_ID = rm.MENU_ID 
+        	left join SYS_USER_ROLE ur on rm.ROLE_ID = ur.ROLE_ID
+        	where m1.MENU_PARENTID = #{id} 
+        	and ur.USER_ID = #{userId}
+        	order by m1.orderno asc
+	</select>
+	
+	<select id="getAllMenuIds" resultType="Integer">
+		SELECT 
+			distinct
+			m1.MENU_ID
+        	FROM SYS_MENU m1 
+        	left join SYS_ROLE_MENU rm on m1.MENU_ID = rm.MENU_ID 
+        	left join SYS_USER_ROLE ur on rm.ROLE_ID = ur.ROLE_ID
+        	where ur.USER_ID = #{id}
+	</select>
+	
+	<select id="getAllParentMenus" resultType="MenuTree">
+		SELECT 
+			MENU_ID as id,
+			MENU_NAME as text
+		FROM 
+			SYS_MENU 
+		WHERE 
+			MENU_LEVEL = 0 
+		order by orderno asc
+	</select>
+	
+	<select id="getMenusByPid" resultType="Menu">
+		SELECT 
+			MENU_ID as id,
+			MENU_NAME as name,
+			MENU_URI as uri,
+			ORDERNO as orderNo 
+		FROM 
+			SYS_MENU 
+		WHERE
+			MENU_PARENTID = #{pid}
+		ORDER BY 
+			ORDERNO ASC
+	</select>
+	
+	<insert id="save" parameterType="Menu">
+		INSERT INTO 
+			SYS_MENU (MENU_NAME, MENU_PARENTID, MENU_URI, MENU_LEVEL, ORDERNO) 
+		VALUES
+			(#{name}, #{pid}, #{uri}, #{level}, #{orderNo})
+	</insert>
+	
+	<update id="update" parameterType="Menu">
+		UPDATE 
+			SYS_MENU 
+		SET 
+			MENU_NAME = #{name}, 
+			MENU_URI = #{uri},
+			ORDERNO = #{orderNo} 
+		WHERE 
+			MENU_ID = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM SYS_MENU WHERE MENU_ID = #{id}
+	</delete>
+	
+	<delete id="deleteRoleMenu">
+		DELETE FROM SYS_ROLE_MENU WHERE MENU_ID = #{id}
+	</delete>
+</mapper>

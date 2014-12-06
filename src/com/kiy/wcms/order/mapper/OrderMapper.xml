@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.order.mapper.OrderMapper">
+	
+	<select id="getOrderList" parameterType="OrderParam" resultType="Order">
+		SELECT 
+			o.ORDER_ID as id,
+			o.ORDER_NO as no,
+			o.ORDER_NAME as name,
+			o.ORDER_CLIENT_NAME as clientName,
+			o.ORDER_SIGN_DATE as signDate,
+			o.ORDER_PAY_PLACE as payPlace,
+			o.ORDER_PAY_DATE as payDate,
+			o.ORDER_TOTAL as total,
+			o.ORDER_SIGNER as signerId,
+			o.ORDER_WARRANTEE as warrantee,
+			o.ORDER_REMARK as remark,
+			u.REALNAME as signerName,
+			o.LINKMAN as linkman,
+			o.PHONE as phone,
+			o.ORDER_STATUS as status 
+		FROM 
+			T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+		
+		<where>
+			<if test="no != null">
+				and o.ORDER_NO like CONCAT('%',#{no},'%')
+			</if>
+			<if test="name != null">
+				and o.ORDER_NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin} 
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd} 
+			</if>
+			<if test="status != null">
+				and o.ORDER_STATUS = #{status}
+			</if>
+		</where>
+		ORDER BY
+			o.ORDER_SIGN_DATE DESC
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getAuditList" parameterType="OrderParam" resultType="Order">
+		SELECT 
+			o.ORDER_ID as id,
+			o.ORDER_NO as no,
+			o.ORDER_NAME as name,
+			o.ORDER_CLIENT_NAME as clientName,
+			o.ORDER_SIGN_DATE as signDate,
+			o.ORDER_PAY_PLACE as payPlace,
+			o.ORDER_PAY_DATE as payDate,
+			o.ORDER_TOTAL as total,
+			o.ORDER_SIGNER as signerId,
+			o.ORDER_WARRANTEE as warrantee,
+			o.ORDER_REMARK as remark,
+			u.REALNAME as signerName,
+			o.LINKMAN as linkman,
+			o.PHONE as phone,
+			o.ORDER_STATUS as status 
+		FROM 
+			T_ORDER o left join SYS_USER u on o.ORDER_SIGNER = u.ID
+		
+		<where>
+			<choose>
+				<when test="auditStatus == 0"><!-- 未审批 -->
+					and o.ORDER_STATUS = #{seeStatus}
+				</when>
+				<otherwise><!-- 已审批 -->
+					and o.ORDER_STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+			<if test="no != null">
+				and o.ORDER_NO like CONCAT('%',#{no},'%')
+			</if>
+			<if test="name != null">
+				and o.ORDER_NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin} 
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd} 
+			</if>
+			<if test="status != null">
+				and o.ORDER_STATUS = #{status}
+			</if>
+		</where>
+		ORDER BY
+			o.ORDER_SIGN_DATE DESC
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<select id="getTotal" parameterType="OrderParam" resultType="Integer">
+		SELECT 
+			count(o.ORDER_ID)
+		FROM 
+			T_ORDER o 
+		
+		<where>
+			<if test="no != null">
+				and o.ORDER_NO like CONCAT('%',#{no},'%')
+			</if>
+			<if test="name != null">
+				and o.ORDER_NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin} 
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd} 
+			</if>
+			<if test="status != null">
+				and o.ORDER_STATUS = #{status}
+			</if>
+		</where>
+	</select>
+	
+	<select id="getAuditTotal" parameterType="OrderParam" resultType="Integer" >
+		SELECT 
+			count(o.ORDER_ID)
+		FROM 
+			T_ORDER o 
+		
+		<where>
+			<choose>
+				<when test="auditStatus == 0"><!-- 未审批 -->
+					and o.ORDER_STATUS = #{seeStatus}
+				</when>
+				<otherwise><!-- 已审批 -->
+					and o.ORDER_STATUS > #{seeStatus}
+				</otherwise>
+			</choose>
+			<if test="no != null">
+				and o.ORDER_NO like CONCAT('%',#{no},'%')
+			</if>
+			<if test="name != null">
+				and o.ORDER_NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="clientName != null">
+				and o.ORDER_CLIENT_NAME like CONCAT('%',#{clientName},'%')
+			</if>
+			<if test="signer != null">
+				and o.ORDER_SIGNER = #{signer} 
+			</if>
+			<if test="signDateBegin != null">
+				and o.ORDER_SIGN_DATE >= #{signDateBegin} 
+			</if>
+			<if test="signDateEnd != null">
+				and o.ORDER_SIGN_DATE &lt;= #{signDateEnd} 
+			</if>
+			<if test="payDateBegin != null">
+				and o.ORDER_PAY_DATE >= #{payDateBegin} 
+			</if>
+			<if test="payDateEnd != null">
+				and o.ORDER_PAY_DATE &lt;= #{payDateEnd} 
+			</if>
+			<if test="totalBegin != null">
+				and o.ORDER_TOTAL >= #{totalBegin} 
+			</if>
+			<if test="totalEnd != null">
+				and o.ORDER_TOTAL &lt;= #{totalEnd} 
+			</if>
+			<if test="status != null">
+				and o.ORDER_STATUS = #{status}
+			</if>
+		</where>
+	</select>
+	
+	<insert id="save" parameterType="Order" useGeneratedKeys="true">
+		<selectKey order="AFTER" keyProperty="id" keyColumn="id" resultType="Integer">
+			SELECT LAST_INSERT_ID() AS id
+		</selectKey>
+		INSERT INTO 
+			T_ORDER (ORDER_NO, ORDER_NAME, ORDER_CLIENT_NAME, ORDER_SIGNER, ORDER_SIGN_DATE, 
+				ORDER_PAY_DATE, ORDER_TOTAL, ORDER_STATUS, ORDER_CREATE_TIME, ORDER_CREATE_USER, 
+				ORDER_PAY_PLACE, ORDER_WARRANTEE, ORDER_REMARK, LINKMAN, PHONE) 
+		VALUES
+			(#{no}, #{name}, #{clientName}, #{signerId}, #{signDate}, #{payDate}, #{total}, 
+			 0, now(), #{createUser.id}, #{payPlace}, #{warrantee}, #{remark}, #{linkman}, #{phone})	
+	</insert>
+	
+	<select id="getNextNo" resultType="Integer">
+		SELECT max(right(ORDER_NO,4)) FROM T_ORDER
+	</select>
+	
+	<update id="updateOrder" parameterType="Order">
+		UPDATE 
+			T_ORDER 
+		SET 
+			ORDER_NAME = #{name}, 
+			ORDER_CLIENT_NAME = #{clientName}, 
+			ORDER_SIGNER = #{signerId}, 
+			ORDER_SIGN_DATE = #{signDate}, 
+			ORDER_PAY_DATE = #{payDate}, 
+			ORDER_TOTAL = #{total},  
+			ORDER_PAY_PLACE = #{payPlace}, 
+			ORDER_WARRANTEE = #{warrantee}, 
+			ORDER_REMARK = #{remark} 
+		WHERE 
+			ORDER_ID = #{id}
+	</update>
+	
+	<update id="submitOrder">
+		UPDATE T_ORDER SET ORDER_STATUS = 10 WHERE ORDER_ID = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM T_ORDER WHERE ORDER_ID = #{id}
+	</delete>
+	
+	<update id="submitAudit">
+		UPDATE T_ORDER SET ORDER_STATUS = #{status} WHERE ORDER_ID = #{id}
+	</update>
+	
+	<select id="getBackTotal" resultType="Integer">
+		SELECT count(1) FROM t_order where ORDER_STATUS = -5555
+	</select>
+</mapper>

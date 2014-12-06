@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.procurementplan.mapper.ProcurementDetailMapper">
+	<select id="getProcurementDetailList"  resultType="ProcurementDetailParam">
+		SELECT 
+			p.ID as id,
+			p.PLANID as planId,
+			g.NAME as name,
+			g.MODEL as model,
+			g.BRAND as brand,
+			p.PURPOSE as purpose,
+			p.AMOUNT as amount,
+			g.UNIT as unitId,
+			u.UNIT_NAME as unitName,
+			g.PRICE as unitPrice,
+			p.BUDGETSUM as budgetSum,
+			p.EXPECTARRIVALDATE as expectArrivalDate,
+			p.REMARK as remark,
+			g.ID as goodsId
+		FROM 
+			PROCUREMENT_DETAIL p 
+			left join 
+			GOODS_STORE g
+			on g.ID = p.GOODSID 
+			left join SYS_UNIT u 
+			on g.UNIT = u.UNIT_ID
+		WHERE
+		    p.PLANID = #{planId}
+	</select>
+	<insert id="saveProcurementDetail" parameterType="ProcurementDetail">
+		INSERT INTO 
+			PROCUREMENT_DETAIL 
+			(PLANID, PURPOSE, AMOUNT, BUDGETSUM, EXPECTARRIVALDATE, REMARK, GOODSID) 
+		VALUES
+			(#{planId}, #{purpose}, #{amount}, #{budgetSum}, #{expectArrivalDate}, #{remark}, #{goodsId})
+	</insert>
+	<update id="updateProcurementDetail" parameterType="ProcurementPlan">
+		UPDATE 
+			PROCUREMENT_DETAIL 
+		SET 
+			PURPOSE = #{purpose}, 
+			AMOUNT = #{amount}, 
+			BUDGETSUM = #{budgetSum},
+			EXPECTARRIVALDATE = #{expectArrivalDate},
+			REMARK = #{remark}
+		WHERE 
+			ID = #{id}
+	</update>
+	<!-- <select id="addProcurementDetailList"  resultType="ProcurementDetailParam">
+		SELECT 
+			g.ID as id,
+			p.PLANID as planId,
+			t.NAME as name,
+			g.MODEL as model,
+			g.BRAND as brand,
+			p.PURPOSE as purpose,
+			p.AMOUNT as amount,
+			g.UNIT as unitId,
+			u.UNIT_NAME as unitName,
+			g.PRICE as unitPrice,
+			p.BUDGETSUM as budgetSum,
+			p.EXPECTARRIVALDATE as expectArrivalDate,
+			p.REMARK as remark
+		FROM 
+			GOODS_STORE g 
+			left join SYS_UNIT u 
+			on g.UNIT = u.UNIT_ID
+			left join GOODS_TYPE t
+			on g.ID = t.ID 
+			left join PROCUREMENT_DETAIL p
+			on g.ID = p.GOODSID 
+	</select> -->
+	<delete id="deleteProcurementDetail">
+		DELETE FROM PROCUREMENT_DETAIL WHERE ID = #{detailId}
+	</delete>
+	<delete id="deleteProcurementDetailByPlanId">
+		DELETE FROM PROCUREMENT_DETAIL WHERE PLANID = #{detailId}
+	</delete>
+	<select id="getPlanDetailListTotal" parameterType="ProcurementDetailParam" resultType="Integer">
+		SELECT 
+			count(d.ID)
+		FROM 
+			PROCUREMENT_DETAIL d 
+			left join 
+			PROCUREMENTPLAN p on d.PLANID = p.ID
+			left join 
+			SYS_USER u on p.APPLYUSER = u.ID
+			left join 
+			GOODS_STORE g on g.ID = d.GOODSID
+			left join 
+			GOODS_TYPE t on g.ID = t.ID
+			left join SYS_UNIT n on g.UNIT = n.UNIT_ID
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="applyUser != null">
+				and p.APPLYUSER = #{applyUser} 
+			</if>
+			<if test="applyDateBegin != null">
+				and p.APPLYDATE >= #{applyDateBegin} 
+			</if>
+			<if test="applyDateEnd != null">
+				and p.APPLYDATE &lt;= #{applyDateEnd} 
+			</if>
+			<if test="name != null">
+				and t.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="model != null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			<if test="brand != null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+				and p.STATUS = 30 
+				and d.ID not in (select PLAN_ID from CONTRACT_DETAIL)
+		</where>
+	</select>
+	<select id="getPlanListByCondition" parameterType="ProcurementDetailParam" resultType="ProcurementDetailParam">
+		SELECT 
+			d.ID as id, 
+			p.CODE as code,
+			p.APPLYUSER as applyUser,
+			u.REALNAME as applyUserName,
+			p.APPLYDATE as applyDate,
+			d.PLANID as planId,
+			g.NAME as name,
+			g.MODEL as model,
+			g.BRAND as brand,
+			d.PURPOSE as purpose,
+			d.AMOUNT as amount,
+			g.UNIT as unitId,
+			n.UNIT_NAME as unitName,
+			g.PRICE as unitPrice,
+			d.BUDGETSUM as budgetSum,
+			d.EXPECTARRIVALDATE as expectArrivalDate,
+			d.REMARK as remark
+		FROM 
+			PROCUREMENT_DETAIL d 
+			left join 
+			PROCUREMENTPLAN p on d.PLANID = p.ID
+			left join 
+			SYS_USER u on p.APPLYUSER = u.ID
+			left join 
+			GOODS_STORE g on g.ID = d.GOODSID
+			left join SYS_UNIT n on g.UNIT = n.UNIT_ID
+		
+		<where>
+			<if test="code != null">
+				and p.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="applyUser != null">
+				and p.APPLYUSER = #{applyUser} 
+			</if>
+			<if test="applyDateBegin != null">
+				and p.APPLYDATE >= #{applyDateBegin} 
+			</if>
+			<if test="applyDateEnd != null">
+				and p.APPLYDATE &lt;= #{applyDateEnd} 
+			</if>
+			<if test="name != null">
+				and t.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="model != null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			<if test="brand != null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+				and p.STATUS = 30 
+				and d.ID not in (select PLAN_ID from CONTRACT_DETAIL)
+		</where>
+		ORDER BY
+			p.APPLYDATE DESC
+		LIMIT
+			#{begin},#{rows}
+	</select>
+	
+	<insert id="saveDetail" parameterType="ContractDetail" useGeneratedKeys="true" keyProperty="planId">
+		INSERT INTO 
+			procurement_detail 
+			(PLANID, PURPOSE, AMOUNT, BUDGETSUM, EXPECTARRIVALDATE, STATUS, REMARK, GOODSID) 
+		VALUES 
+			(-1, '', #{amount}, 0, now(), 0, '', #{goodsId})
+	</insert>
+</mapper>

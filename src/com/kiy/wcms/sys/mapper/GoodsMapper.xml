@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiy.wcms.sys.mapper.GoodsMapper">
+	<select id="getGoodsByTid" resultType="Goods">
+		SELECT 
+			g.ID as id,
+			g.CODE as code, 
+			g.MODEL as model, 
+			g.BRAND as brand, 
+			u.UNIT_NAME as unitName,
+			g.NAME as name,
+			g.REMARK as remark
+		FROM 
+			GOODS_STORE g left join SYS_UNIT u on g.UNIT = u.UNIT_ID
+		WHERE
+			g.GOODS_TYPE in(
+				select ID from goods_type where ID = #{tid}
+				union
+				SELECT ID FROM goods_type WHERE PARENTID = #{tid})
+			<if test="name!=null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="code!=null">
+				and g.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="model!=null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			<if test="brand!=null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+	</select>
+	
+	<select id="getTotal" resultType="Integer">
+		SELECT 
+			count(1)
+		FROM 
+			GOODS_STORE g
+		WHERE
+			g.GOODS_TYPE in(
+				select ID from goods_type where ID = #{tid}
+				union
+				SELECT ID FROM goods_type WHERE PARENTID = #{tid})
+			<if test="name!=null">
+				and g.NAME like CONCAT('%',#{name},'%')
+			</if>
+			<if test="code!=null">
+				and g.CODE like CONCAT('%',#{code},'%')
+			</if>
+			<if test="model!=null">
+				and g.MODEL like CONCAT('%',#{model},'%')
+			</if>
+			<if test="brand!=null">
+				and g.BRAND like CONCAT('%',#{brand},'%')
+			</if>
+	</select>
+	
+	<insert id="addGoods" parameterType="Goods">
+		INSERT INTO GOODS_STORE (MODEL, BRAND, UNIT,GOODS_TYPE, STATUS, NAME, REMARK) VALUES
+		(#{model},#{brand},#{unit},#{typeId}, 0, #{name}, #{remark})
+	</insert>
+	
+	<select id="countGoods" parameterType="Goods" resultType="Integer">
+		select 
+			count(1) 
+		from 
+			GOODS_STORE 
+		where 
+			NAME=#{name}
+			and 
+			MODEL=#{model}
+			and 
+			BRAND=#{brand}
+			and 
+			UNIT=#{unit}
+			and
+			GOODS_TYPE=#{typeId}
+	</select>
+</mapper> 
